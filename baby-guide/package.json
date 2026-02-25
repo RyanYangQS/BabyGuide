@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@qiun/ucharts": "^2.5.0-20230101",
     "dayjs": "^1.11.19",
     "lodash-es": "^4.17.23",
     "pinia": "^3.0.4",

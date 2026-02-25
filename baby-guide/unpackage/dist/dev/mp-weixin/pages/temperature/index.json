@@ -3,6 +3,7 @@
   "navigationBarBackgroundColor": "#FFFFFF",
   "navigationBarTextStyle": "black",
   "usingComponents": {
-    "temperature-modal": "../../src/components/TemperatureModal"
+    "temperature-modal": "../../src/components/TemperatureModal",
+    "temperature-chart": "../../src/components/TemperatureChart"
   }
 }

@@ -4,9 +4,10 @@ const src_store_modules_health = require("../../src/store/modules/health.js");
 const src_utils_theme = require("../../src/utils/theme.js");
 const src_utils_date = require("../../src/utils/date.js");
 if (!Math) {
-  TemperatureModal();
+  (TemperatureChart + TemperatureModal)();
 }
 const TemperatureModal = () => "../../src/components/TemperatureModal.js";
+const TemperatureChart = () => "../../src/components/TemperatureChart.js";
 const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "index",
   setup(__props) {
@@ -37,6 +38,12 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       const avg = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
       return { max, min, avg };
     });
+    const chartData = common_vendor.computed(() => {
+      return temperatureRecords.value.slice().reverse().map((record) => ({
+        time: record.measureTime,
+        temperature: record.temperature
+      }));
+    });
     function getRecordClass(temp) {
       const status = src_utils_theme.getHealthStatus(temp);
       return `record-${status}`;
@@ -62,9 +69,6 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         ear: "耳温测量"
       };
       return partMap[part] || part;
-    }
-    function handleAdd() {
-      showAddModal.value = true;
     }
     function handleRecordSuccess() {
     }
@@ -115,12 +119,19 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         i: common_vendor.o(($event) => timeFilter.value = "yesterday"),
         j: timeFilter.value === "week" ? 1 : "",
         k: common_vendor.o(($event) => timeFilter.value = "week"),
-        l: common_vendor.t(temperatureStats.value.max),
-        m: common_vendor.t(temperatureStats.value.min),
-        n: common_vendor.t(temperatureStats.value.avg),
-        o: temperatureRecords.value.length > 0
+        l: !showAddModal.value
+      }, !showAddModal.value ? {
+        m: common_vendor.p({
+          data: chartData.value,
+          height: 300
+        })
+      } : {}, {
+        n: common_vendor.t(temperatureStats.value.max),
+        o: common_vendor.t(temperatureStats.value.min),
+        p: common_vendor.t(temperatureStats.value.avg),
+        q: temperatureRecords.value.length > 0
       }, temperatureRecords.value.length > 0 ? {
-        p: common_vendor.f(temperatureRecords.value, (record, k0, i0) => {
+        r: common_vendor.f(temperatureRecords.value, (record, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(record.temperature),
             b: common_vendor.t(getStatusText(record.temperature)),
@@ -136,13 +147,13 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           });
         })
       } : {}, {
-        q: common_vendor.o(handleAdd),
-        r: common_vendor.o(handleRecordSuccess),
-        s: common_vendor.o(($event) => showAddModal.value = $event),
-        t: common_vendor.p({
+        s: common_vendor.o(($event) => showAddModal.value = true),
+        t: common_vendor.o(handleRecordSuccess),
+        v: common_vendor.o(($event) => showAddModal.value = $event),
+        w: common_vendor.p({
           show: showAddModal.value
         }),
-        v: common_vendor.n(themeClass.value)
+        x: common_vendor.n(themeClass.value)
       });
     };
   }

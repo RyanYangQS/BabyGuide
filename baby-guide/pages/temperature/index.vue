@@ -46,10 +46,11 @@
           </view>
         </view>
       </view>
-      <view class="chart-placeholder">
-        <text class="placeholder-icon">📈</text>
-        <text class="placeholder-text">体温趋势图</text>
-        <text class="placeholder-desc">（后续集成图表组件）</text>
+      <view class="chart-wrapper" v-if="!showAddModal">
+        <TemperatureChart 
+          :data="chartData" 
+          :height="300"
+        />
       </view>
     </view>
 
@@ -103,7 +104,7 @@
     </view>
 
     <!-- 添加按钮 -->
-    <view class="add-btn" @click="handleAdd">
+    <view class="add-btn" @click="showAddModal = true">
       <text class="add-icon">+</text>
     </view>
 
@@ -121,6 +122,7 @@ import { useHealthStore } from '../../src/store/modules/health'
 import { getHealthStatus } from '../../src/utils/theme'
 import { formatDate } from '../../src/utils/date'
 import TemperatureModal from '../../src/components/TemperatureModal.vue'
+import TemperatureChart from '../../src/components/TemperatureChart.vue'
 
 const healthStore = useHealthStore()
 
@@ -157,6 +159,17 @@ const temperatureStats = computed(() => {
   return { max, min, avg }
 })
 
+// 图表数据
+const chartData = computed(() => {
+  return temperatureRecords.value
+    .slice()
+    .reverse()
+    .map(record => ({
+      time: record.measureTime,
+      temperature: record.temperature
+    }))
+})
+
 function getRecordClass(temp: number): string {
   const status = getHealthStatus(temp)
   return `record-${status}`
@@ -185,10 +198,6 @@ function getMeasurePartText(part: string): string {
     ear: '耳温测量'
   }
   return partMap[part] || part
-}
-
-function handleAdd() {
-  showAddModal.value = true
 }
 
 function handleRecordSuccess() {
@@ -326,7 +335,7 @@ onMounted(() => {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 32rpx;
+    margin-bottom: 24rpx;
   }
   
   .chart-title {
@@ -350,32 +359,6 @@ onMounted(() => {
         background: rgba(74, 144, 226, 0.1);
         color: #4A90E2;
       }
-    }
-  }
-  
-  .chart-placeholder {
-    height: 300rpx;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    background: #f5f5f5;
-    border-radius: 16rpx;
-    
-    .placeholder-icon {
-      font-size: 64rpx;
-      margin-bottom: 16rpx;
-    }
-    
-    .placeholder-text {
-      font-size: 28rpx;
-      color: #666;
-    }
-    
-    .placeholder-desc {
-      font-size: 24rpx;
-      color: #999;
-      margin-top: 8rpx;
     }
   }
 }

@@ -77,7 +77,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 32rpx;
+  margin-bottom: 24rpx;
 }
 .chart-section .chart-title.data-v-91920ce0 {
   font-size: 32rpx;
@@ -98,28 +98,6 @@
 .chart-section .time-filter .filter-btn.active.data-v-91920ce0 {
   background: rgba(74, 144, 226, 0.1);
   color: #4A90E2;
-}
-.chart-section .chart-placeholder.data-v-91920ce0 {
-  height: 300rpx;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #f5f5f5;
-  border-radius: 16rpx;
-}
-.chart-section .chart-placeholder .placeholder-icon.data-v-91920ce0 {
-  font-size: 64rpx;
-  margin-bottom: 16rpx;
-}
-.chart-section .chart-placeholder .placeholder-text.data-v-91920ce0 {
-  font-size: 28rpx;
-  color: #666;
-}
-.chart-section .chart-placeholder .placeholder-desc.data-v-91920ce0 {
-  font-size: 24rpx;
-  color: #999;
-  margin-top: 8rpx;
 }
 .stats-section.data-v-91920ce0 {
   display: flex;
