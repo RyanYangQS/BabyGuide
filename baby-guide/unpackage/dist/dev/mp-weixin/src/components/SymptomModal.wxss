@@ -1,0 +1,156 @@
+.modal-mask.data-v-7adfb1c2 {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: flex-end;
+  z-index: 1000;
+}
+.modal-content.data-v-7adfb1c2 {
+  width: 100%;
+  background: #FFFFFF;
+  border-radius: 40rpx 40rpx 0 0;
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.modal-header.data-v-7adfb1c2 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 40rpx 48rpx;
+  border-bottom: 1rpx solid #eee;
+}
+.modal-header .modal-title.data-v-7adfb1c2 {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+}
+.modal-header .modal-close.data-v-7adfb1c2 {
+  width: 72rpx;
+  height: 72rpx;
+  border-radius: 50%;
+  background: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-header .modal-close text.data-v-7adfb1c2 {
+  font-size: 32rpx;
+  color: #999;
+}
+.modal-body.data-v-7adfb1c2 {
+  padding: 40rpx 48rpx;
+}
+.form-item.data-v-7adfb1c2 {
+  margin-bottom: 40rpx;
+}
+.form-item.data-v-7adfb1c2:last-child {
+  margin-bottom: 0;
+}
+.form-label.data-v-7adfb1c2 {
+  display: block;
+  font-size: 28rpx;
+  color: #666;
+  margin-bottom: 20rpx;
+  font-weight: 500;
+}
+.symptom-grid.data-v-7adfb1c2 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 20rpx;
+}
+.symptom-grid .symptom-item.data-v-7adfb1c2 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20rpx 10rpx;
+  background: #f5f5f5;
+  border-radius: 16rpx;
+  border: 4rpx solid transparent;
+  transition: all 0.3s;
+}
+.symptom-grid .symptom-item.active.data-v-7adfb1c2 {
+  background: rgba(74, 144, 226, 0.1);
+  border-color: #4A90E2;
+}
+.symptom-grid .symptom-item .symptom-icon.data-v-7adfb1c2 {
+  font-size: 40rpx;
+  margin-bottom: 8rpx;
+}
+.symptom-grid .symptom-item .symptom-name.data-v-7adfb1c2 {
+  font-size: 22rpx;
+  color: #666;
+}
+.severity-options.data-v-7adfb1c2 {
+  display: flex;
+  gap: 20rpx;
+}
+.severity-options .severity-item.data-v-7adfb1c2 {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12rpx;
+  padding: 24rpx;
+  background: #f5f5f5;
+  border-radius: 16rpx;
+  border: 4rpx solid transparent;
+  transition: all 0.3s;
+}
+.severity-options .severity-item.active.data-v-7adfb1c2 {
+  background: rgba(74, 144, 226, 0.1);
+  border-color: #4A90E2;
+}
+.severity-options .severity-item .severity-dot.data-v-7adfb1c2 {
+  width: 16rpx;
+  height: 16rpx;
+  border-radius: 50%;
+}
+.severity-options .severity-item .severity-name.data-v-7adfb1c2 {
+  font-size: 28rpx;
+  color: #333;
+}
+.form-textarea.data-v-7adfb1c2 {
+  width: 100%;
+  min-height: 160rpx;
+  background: #f5f5f5;
+  border-radius: 20rpx;
+  padding: 20rpx;
+  font-size: 28rpx;
+  box-sizing: border-box;
+}
+.modal-footer.data-v-7adfb1c2 {
+  display: flex;
+  gap: 30rpx;
+  padding: 32rpx 48rpx;
+  padding-bottom: calc(32rpx + env(safe-area-inset-bottom));
+}
+.modal-footer .btn-cancel.data-v-7adfb1c2,
+.modal-footer .btn-confirm.data-v-7adfb1c2 {
+  flex: 1;
+  height: 96rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 48rpx;
+}
+.modal-footer .btn-cancel text.data-v-7adfb1c2,
+.modal-footer .btn-confirm text.data-v-7adfb1c2 {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+.modal-footer .btn-cancel.data-v-7adfb1c2 {
+  background: #f5f5f5;
+}
+.modal-footer .btn-cancel text.data-v-7adfb1c2 {
+  color: #666;
+}
+.modal-footer .btn-confirm.data-v-7adfb1c2 {
+  background: #4A90E2;
+}
+.modal-footer .btn-confirm text.data-v-7adfb1c2 {
+  color: #fff;
+}

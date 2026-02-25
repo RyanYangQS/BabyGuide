@@ -1,0 +1,156 @@
+@import './variables.scss';
+
+// 重置样式
+page {
+  background-color: $background-color;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: $font-md;
+  color: $text-color;
+  line-height: 1.5;
+}
+
+view, text {
+  box-sizing: border-box;
+}
+
+// 通用工具类
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.flex-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-1 {
+  flex: 1;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+// 安全区域
+.safe-area-bottom {
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+// 卡片样式
+.card {
+  background-color: #FFFFFF;
+  border-radius: $radius-lg;
+  padding: $spacing-md;
+  margin-bottom: $spacing-md;
+  box-shadow: $shadow-sm;
+}
+
+// 按钮样式
+.btn-primary {
+  background-color: $primary-color;
+  color: #FFFFFF;
+  border-radius: $radius-full;
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-md;
+  border: none;
+  
+  &:active {
+    opacity: 0.8;
+  }
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: $primary-color;
+  border: 2rpx solid $primary-color;
+  border-radius: $radius-full;
+  padding: $spacing-sm $spacing-lg;
+  font-size: $font-md;
+}
+
+// 健康状态主题类
+.theme-healthy {
+  --theme-primary: #{$healthy-primary};
+  --theme-light: #{$healthy-light};
+  --theme-border: #{$healthy-border};
+}
+
+.theme-low-fever {
+  --theme-primary: #{$low-fever-primary};
+  --theme-light: #{$low-fever-light};
+  --theme-border: #{$low-fever-border};
+}
+
+.theme-fever {
+  --theme-primary: #{$fever-primary};
+  --theme-light: #{$fever-light};
+  --theme-border: #{$fever-border};
+}
+
+// 标签样式
+.tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 4rpx 16rpx;
+  border-radius: $radius-sm;
+  font-size: $font-xs;
+  
+  &.tag-healthy {
+    background-color: $healthy-light;
+    color: $healthy-primary;
+  }
+  
+  &.tag-low-fever {
+    background-color: $low-fever-light;
+    color: $low-fever-primary;
+  }
+  
+  &.tag-fever {
+    background-color: $fever-light;
+    color: $fever-primary;
+  }
+}
+
+// 分割线
+.divider {
+  height: 1rpx;
+  background-color: $border-color;
+  margin: $spacing-md 0;
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 100rpx 0;
+  
+  .empty-icon {
+    font-size: 120rpx;
+    color: $text-light;
+    margin-bottom: $spacing-md;
+  }
+  
+  .empty-text {
+    font-size: $font-md;
+    color: $text-light;
+  }
+}

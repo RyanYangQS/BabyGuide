@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "dayjs": "^1.11.19",
+    "lodash-es": "^4.17.23",
+    "pinia": "^3.0.4",
+    "uview-plus": "^3.7.13"
+  },
+  "devDependencies": {
+    "@dcloudio/types": "^3.4.29",
+    "@types/lodash-es": "^4.17.12"
+  }
+}

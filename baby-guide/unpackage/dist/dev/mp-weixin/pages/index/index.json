@@ -1,0 +1,11 @@
+{
+  "navigationBarTitleText": "儿童健康管理",
+  "navigationBarBackgroundColor": "#FFFFFF",
+  "navigationBarTextStyle": "black",
+  "usingComponents": {
+    "temperature-modal": "../../src/components/TemperatureModal",
+    "medicine-modal": "../../src/components/MedicineModal",
+    "symptom-modal": "../../src/components/SymptomModal",
+    "quick-add-modal": "../../src/components/QuickAddModal"
+  }
+}

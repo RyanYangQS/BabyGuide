@@ -1,0 +1,1967 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童健康管理小程序</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4A90E2;
+            --secondary-color: #7ED321;
+            --warning-color: #F5A623;
+            --danger-color: #D0021B;
+            --bg-color: #F8F9FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #333333;
+            --text-secondary: #666666;
+            --text-weak: #999999;
+            --border-color: #E0E0E0;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+            --shadow-lg: 0 4px 16px rgba(0,0,0,0.12);
+        }
+
+        /* 健康状态主题 */
+        .theme-healthy {
+            --theme-primary: #7ED321;
+            --theme-secondary: #9BE34D;
+            --theme-gradient-start: #7ED321;
+            --theme-gradient-end: #9BE34D;
+        }
+
+        .theme-fever {
+            --theme-primary: #D0021B;
+            --theme-secondary: #FF4D6A;
+            --theme-gradient-start: #D0021B;
+            --theme-gradient-end: #FF4D6A;
+        }
+
+        .theme-low-fever {
+            --theme-primary: #F5A623;
+            --theme-secondary: #FFB84D;
+            --theme-gradient-start: #F5A623;
+            --theme-gradient-end: #FFB84D;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .app-container {
+            max-width: 750px;
+            margin: 0 auto;
+            background: var(--bg-color);
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* 页面切换动画 */
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* 导航栏 */
+        .navbar {
+            background: var(--card-bg);
+            padding: 16px;
+            box-shadow: var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .navbar-title {
+            font-size: 18px;
+            font-weight: 700;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        /* 儿童档案卡片 */
+        .child-card {
+            background: linear-gradient(135deg, var(--theme-gradient-start, var(--primary-color)) 0%, var(--theme-gradient-end, #5BA3F5) 100%);
+            border-radius: 16px;
+            padding: 20px;
+            margin: 16px;
+            color: white;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.5s ease;
+        }
+
+        .child-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: pulse 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.8; }
+        }
+
+        .child-info {
+            display: flex;
+            align-items: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .child-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-right: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .child-details h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .child-details p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        /* 今日概览 */
+        .overview-section {
+            padding: 0 16px;
+            margin-bottom: 16px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .overview-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .overview-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .overview-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .overview-card .value {
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .overview-card .label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .overview-card.temperature .value {
+            color: var(--theme-primary, var(--danger-color));
+        }
+
+        .overview-card.medicine .value {
+            color: var(--primary-color);
+        }
+
+        .overview-card.symptom .value {
+            color: var(--warning-color);
+        }
+
+        /* 快速记录按钮 */
+        .quick-actions {
+            padding: 0 16px;
+            margin-bottom: 24px;
+        }
+
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .action-btn {
+            background: var(--card-bg);
+            border: none;
+            border-radius: 12px;
+            padding: 20px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .action-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .action-btn .icon {
+            font-size: 32px;
+        }
+
+        .action-btn .text {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        /* 最近记录 */
+        .recent-records {
+            padding: 0 16px;
+            margin-bottom: 80px;
+        }
+
+        .record-item {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .record-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+        }
+
+        .record-item.high-fever::before {
+            background: var(--theme-primary, var(--danger-color));
+        }
+
+        .record-item.medicine::before {
+            background: var(--primary-color);
+        }
+
+        .record-item.symptom::before {
+            background: var(--warning-color);
+        }
+
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .record-type {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .record-time {
+            font-size: 12px;
+            color: var(--text-weak);
+        }
+
+        .record-content {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 750px;
+            background: var(--card-bg);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.08);
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            padding: 8px;
+            border: none;
+            background: none;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item .icon {
+            font-size: 24px;
+            transition: transform 0.3s ease;
+        }
+
+        .nav-item .label {
+            font-size: 12px;
+            color: var(--text-weak);
+            transition: color 0.3s ease;
+        }
+
+        .nav-item.active .icon {
+            transform: scale(1.2);
+        }
+
+        .nav-item.active .label {
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        /* 体温记录页 */
+        .chart-container {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin: 16px;
+            box-shadow: var(--shadow);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        .time-filter {
+            display: flex;
+            gap: 8px;
+        }
+
+        .filter-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-color);
+            background: var(--card-bg);
+            border-radius: 16px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        #temperatureChart {
+            width: 100%;
+            height: 200px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin: 16px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-weak);
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        /* 用药管理页 */
+        .medicine-alert {
+            background: linear-gradient(135deg, var(--warning-color) 0%, #FFB84D 100%);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px;
+            color: white;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .alert-title {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .alert-time {
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .alert-countdown {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .medicine-stats {
+            background: rgba(255,255,255,0.2);
+            border-radius: 8px;
+            padding: 12px;
+            margin-top: 12px;
+        }
+
+        .medicine-list {
+            padding: 0 16px;
+            margin-bottom: 80px;
+        }
+
+        .medicine-item {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+        }
+
+        .medicine-name {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .medicine-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .medicine-next-time {
+            font-size: 12px;
+            color: var(--theme-primary, var(--primary-color));
+            font-weight: 600;
+        }
+
+        /* 快速录入按钮 */
+        .quick-add-btn {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: var(--theme-primary, var(--primary-color));
+            color: white;
+            border: none;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--shadow-lg);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 90;
+        }
+
+        .quick-add-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        .quick-add-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 快速录入弹窗 */
+        .quick-add-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .quick-add-modal.active {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .quick-add-content {
+            background: white;
+            width: 100%;
+            max-width: 750px;
+            border-radius: 24px 24px 0 0;
+            padding: 0;
+            max-height: 85vh;
+            overflow-y: auto;
+            animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #F8F9FA;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .modal-close:hover {
+            background: #E9ECEF;
+            transform: rotate(90deg);
+        }
+
+        .form-section {
+            padding: 20px 24px;
+            border-bottom: 8px solid #F8F9FA;
+        }
+
+        .form-section:last-of-type {
+            border-bottom: none;
+        }
+
+        .form-section-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            height: 48px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0 16px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: #FAFBFC;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--theme-primary, var(--primary-color));
+            background: white;
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+        }
+
+        .form-textarea {
+            width: 100%;
+            min-height: 100px;
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 12px 16px;
+            font-size: 16px;
+            resize: vertical;
+            font-family: inherit;
+            background: #FAFBFC;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea:focus {
+            outline: none;
+            border-color: var(--theme-primary, var(--primary-color));
+            background: white;
+            box-shadow: 0 0 0 4px rgba(74, 144, 226, 0.1);
+        }
+
+        .tag-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .tag-btn {
+            padding: 10px 20px;
+            border: 2px solid var(--border-color);
+            background: white;
+            border-radius: 24px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .tag-btn:hover {
+            border-color: var(--theme-primary, var(--primary-color));
+            background: rgba(74, 144, 226, 0.05);
+        }
+
+        .tag-btn.active {
+            background: var(--theme-primary, var(--primary-color));
+            color: white;
+            border-color: var(--theme-primary, var(--primary-color));
+            box-shadow: 0 4px 12px rgba(74, 144, 226, 0.3);
+        }
+
+        .submit-btn {
+            width: calc(100% - 48px);
+            height: 52px;
+            background: var(--theme-primary, var(--primary-color));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 24px;
+            box-shadow: 0 4px 16px rgba(74, 144, 226, 0.3);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 菜单列表 */
+        .menu-list {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .menu-item:hover {
+            background: #F8F9FA;
+        }
+
+        .menu-item:active {
+            background: #F0F0F0;
+        }
+
+        .menu-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--theme-primary, var(--primary-color)) 0%, var(--theme-secondary, #5BA3F5) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+
+        .menu-content {
+            flex: 1;
+        }
+
+        .menu-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .menu-desc {
+            font-size: 12px;
+            color: var(--text-weak);
+        }
+
+        /* 儿童档案卡片 */
+        .child-profile-card {
+            background: white;
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .child-profile-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .child-profile-card:active {
+            transform: translateY(0);
+        }
+
+        /* 成员卡片 */
+        .member-card {
+            background: white;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 8px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+        }
+
+        .member-card:hover {
+            background: #F8F9FA;
+        }
+
+        .member-card:last-child {
+            margin-bottom: 0;
+        }
+
+        .menu-arrow {
+            font-size: 20px;
+            color: var(--text-weak);
+            margin-left: 8px;
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 480px) {
+            .overview-cards {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .overview-card .value {
+                font-size: 20px;
+            }
+
+            .action-buttons {
+                gap: 8px;
+            }
+
+            .action-btn {
+                padding: 16px 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 首页 -->
+        <div id="homePage" class="page active">
+            <div class="navbar">
+                <div class="navbar-title">儿童健康管理</div>
+            </div>
+
+            <!-- 儿童档案卡片 -->
+            <div class="child-card">
+                <div class="child-info">
+                    <div class="child-avatar">👶</div>
+                    <div class="child-details">
+                        <h2>小明</h2>
+                        <p>3岁 · 男 · 过敏史:无</p>
+                        <p id="statusIndicator" style="font-size: 12px; margin-top: 4px; opacity: 0.9;">🔴 发热状态</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 状态切换器(测试用) -->
+            <div style="padding: 0 16px; margin-bottom: 16px;">
+                <div style="font-size: 12px; color: var(--text-weak); margin-bottom: 8px;">测试主题切换:</div>
+                <div style="display: flex; gap: 8px;">
+                    <button onclick="changeTheme('healthy')" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: #7ED321; color: white; font-size: 12px; cursor: pointer;">健康 (绿色)</button>
+                    <button onclick="changeTheme('low-fever')" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: #F5A623; color: white; font-size: 12px; cursor: pointer;">低热 (黄色)</button>
+                    <button onclick="changeTheme('fever')" style="flex: 1; padding: 8px; border: none; border-radius: 8px; background: #D0021B; color: white; font-size: 12px; cursor: pointer;">发热 (红色)</button>
+                </div>
+            </div>
+
+            <!-- 今日概览 -->
+            <div class="overview-section">
+                <div class="section-title">今日概览</div>
+                <div class="overview-cards">
+                    <div class="overview-card temperature">
+                        <div class="value">38.5℃</div>
+                        <div class="label">体温</div>
+                    </div>
+                    <div class="overview-card medicine">
+                        <div class="value">2次</div>
+                        <div class="label">用药</div>
+                    </div>
+                    <div class="overview-card symptom">
+                        <div class="value">3条</div>
+                        <div class="label">症状</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 快速记录 -->
+            <div class="quick-actions">
+                <div class="section-title">快速记录</div>
+                <div class="action-buttons">
+                    <button class="action-btn" onclick="showAddTemperature()">
+                        <div class="icon">🌡️</div>
+                        <div class="text">体温</div>
+                    </button>
+                    <button class="action-btn" onclick="showAddMedicine()">
+                        <div class="icon">💊</div>
+                        <div class="text">用药</div>
+                    </button>
+                    <button class="action-btn" onclick="showAddSymptom()">
+                        <div class="icon">📝</div>
+                        <div class="text">症状</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- 最近记录 -->
+            <div class="recent-records">
+                <div class="section-title">最近记录</div>
+                <div class="record-item high-fever">
+                    <div class="record-header">
+                        <div class="record-type">体温 38.5℃</div>
+                        <div class="record-time">今天 10:30</div>
+                    </div>
+                    <div class="record-content">状态:高热 | 腋下测量</div>
+                </div>
+                <div class="record-item medicine">
+                    <div class="record-header">
+                        <div class="record-type">用药 美林</div>
+                        <div class="record-time">今天 08:00</div>
+                    </div>
+                    <div class="record-content">剂量:5ml | 下次可用:12:00</div>
+                </div>
+                <div class="record-item high-fever">
+                    <div class="record-header">
+                        <div class="record-type">体温 39.2℃</div>
+                        <div class="record-time">昨天 14:30</div>
+                    </div>
+                    <div class="record-content">状态:高热 | 耳温测量</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 我的页面 - 人员建档 -->
+        <div id="profilePage" class="page">
+            <div class="navbar">
+                <div class="navbar-title">人员建档</div>
+            </div>
+
+            <!-- 儿童档案管理 -->
+            <div style="padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="section-title">儿童档案</div>
+                    <button onclick="showAddChildForm()" style="padding: 8px 16px; background: var(--theme-primary, var(--primary-color)); color: white; border: none; border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer;">+ 添加儿童</button>
+                </div>
+
+                <!-- 儿童档案列表 -->
+                <div class="child-profile-card" onclick="editChild('child1')">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%); display: flex; align-items: center; justify-content: center; font-size: 32px;">👶</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">小明</div>
+                            <div style="font-size: 14px; color: var(--text-secondary);">男 · 3岁 · 2023-01-15出生</div>
+                            <div style="font-size: 12px; color: var(--text-weak); margin-top: 4px;">血型: A型 · 过敏史: 无</div>
+                        </div>
+                        <div style="font-size: 20px; color: var(--text-weak);">›</div>
+                    </div>
+                </div>
+
+                <div class="child-profile-card" onclick="editChild('child2')">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div style="width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, #B0E0E6 0%, #ADD8E6 100%); display: flex; align-items: center; justify-content: center; font-size: 32px;">👧</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 18px; font-weight: 700; margin-bottom: 4px;">小红</div>
+                            <div style="font-size: 14px; color: var(--text-secondary);">女 · 5岁 · 2021-03-20出生</div>
+                            <div style="font-size: 12px; color: var(--text-weak); margin-top: 4px;">血型: B型 · 过敏史: 青霉素</div>
+                        </div>
+                        <div style="font-size: 20px; color: var(--text-weak);">›</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 家庭成员管理 -->
+            <div style="padding: 0 16px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div class="section-title">家庭成员</div>
+                    <button onclick="showAddMemberForm()" style="padding: 8px 16px; background: transparent; color: var(--theme-primary, var(--primary-color)); border: 1px solid var(--theme-primary, var(--primary-color)); border-radius: 20px; font-size: 14px; font-weight: 600; cursor: pointer;">+ 邀请成员</button>
+                </div>
+
+                <div class="member-card">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--theme-primary, var(--primary-color)); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">爸</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 16px; font-weight: 600;">张三</div>
+                            <div style="font-size: 12px; color: var(--text-weak);">管理员 · 已验证</div>
+                        </div>
+                        <div style="font-size: 12px; padding: 4px 12px; background: #E8F5E9; color: #4CAF50; border-radius: 12px; font-weight: 600;">本人</div>
+                    </div>
+                </div>
+
+                <div class="member-card">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #FF69B4; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">妈</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 16px; font-weight: 600;">李四</div>
+                            <div style="font-size: 12px; color: var(--text-weak);">管理员 · 已验证</div>
+                        </div>
+                        <div style="font-size: 12px; padding: 4px 12px; background: #E3F2FD; color: #2196F3; border-radius: 12px; font-weight: 600;">管理员</div>
+                    </div>
+                </div>
+
+                <div class="member-card">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: #FFA726; display: flex; align-items: center; justify-content: center; color: white; font-weight: 700;">奶</div>
+                        <div style="flex: 1;">
+                            <div style="font-size: 16px; font-weight: 600;">王五</div>
+                            <div style="font-size: 12px; color: var(--text-weak);">查看权限 · 已验证</div>
+                        </div>
+                        <div style="font-size: 12px; padding: 4px 12px; background: #FFF3E0; color: #FF9800; border-radius: 12px; font-weight: 600;">查看</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 其他功能 -->
+            <div style="padding: 0 16px 80px;">
+                <div class="section-title">其他功能</div>
+                <div class="menu-list">
+                    <div class="menu-item" onclick="showFeature('feedback')">
+                        <div class="menu-icon" style="background: transparent;">💬</div>
+                        <div class="menu-content">
+                            <div class="menu-title">意见反馈</div>
+                            <div class="menu-desc">帮助我们改进产品</div>
+                        </div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                    <div class="menu-item" onclick="showFeature('about')">
+                        <div class="menu-icon" style="background: transparent;">ℹ️</div>
+                        <div class="menu-content">
+                            <div class="menu-title">关于我们</div>
+                            <div class="menu-desc">版本信息与联系方式</div>
+                        </div>
+                        <div class="menu-arrow">›</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 体温记录页 -->
+        <div id="temperaturePage" class="page">
+            <div class="navbar">
+                <div class="navbar-title">体温记录</div>
+            </div>
+
+            <!-- 时间筛选 -->
+            <div class="chart-container">
+                <div class="chart-header">
+                    <div class="chart-title">体温趋势</div>
+                    <div class="time-filter">
+                        <button class="filter-btn active">今天</button>
+                        <button class="filter-btn">昨天</button>
+                        <button class="filter-btn">近7天</button>
+                    </div>
+                </div>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+
+            <!-- 体温统计 -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">最高体温</div>
+                    <div class="stat-value" style="color: var(--danger-color)">39.2℃</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">最低体温</div>
+                    <div class="stat-value" style="color: var(--secondary-color)">37.5℃</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">平均体温</div>
+                    <div class="stat-value" style="color: var(--warning-color)">38.3℃</div>
+                </div>
+            </div>
+
+            <!-- 记录列表 -->
+            <div class="recent-records">
+                <div class="section-title">记录列表</div>
+                <div class="record-item high-fever">
+                    <div class="record-header">
+                        <div class="record-type">🔴 39.2℃</div>
+                        <div class="record-time">今天 14:30</div>
+                    </div>
+                    <div class="record-content">高热 | 腋下测量 | 精神状态一般</div>
+                </div>
+                <div class="record-item high-fever">
+                    <div class="record-header">
+                        <div class="record-type">🟡 38.5℃</div>
+                        <div class="record-time">今天 10:30</div>
+                    </div>
+                    <div class="record-content">中热 | 耳温测量</div>
+                </div>
+                <div class="record-item high-fever">
+                    <div class="record-header">
+                        <div class="record-type">🟡 38.0℃</div>
+                        <div class="record-time">今天 06:00</div>
+                    </div>
+                    <div class="record-content">中热 | 腋下测量</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 用药管理页 -->
+        <div id="medicinePage" class="page">
+            <div class="navbar">
+                <div class="navbar-title">用药管理</div>
+            </div>
+
+            <!-- 用药提醒 -->
+            <div class="medicine-alert">
+                <div class="alert-title">⏰ 下次可用时间</div>
+                <div class="alert-time">12:00</div>
+                <div class="alert-countdown">(还剩2小时30分)</div>
+                <div class="medicine-stats">
+                    <div style="font-size: 14px; font-weight: 600;">📊 今日用药统计</div>
+                    <div style="font-size: 16px; margin-top: 4px;">美林: 2/4次</div>
+                </div>
+            </div>
+
+            <!-- 用药记录 -->
+            <div class="medicine-list">
+                <div class="section-title">用药记录</div>
+                <div class="medicine-item">
+                    <div class="medicine-name">美林(布洛芬混悬液)</div>
+                    <div class="medicine-details">
+                        <span>剂量: 5ml</span>
+                        <span>时间: 今天 08:00</span>
+                    </div>
+                    <div class="medicine-next-time">⏱ 下次可用: 12:00</div>
+                </div>
+                <div class="medicine-item">
+                    <div class="medicine-name">美林(布洛芬混悬液)</div>
+                    <div class="medicine-details">
+                        <span>剂量: 5ml</span>
+                        <span>时间: 昨天 20:00</span>
+                    </div>
+                </div>
+                <div class="medicine-item">
+                    <div class="medicine-name">泰诺林(对乙酰氨基酚)</div>
+                    <div class="medicine-details">
+                        <span>剂量: 3ml</span>
+                        <span>时间: 昨天 14:00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 快速录入按钮 -->
+        <button class="quick-add-btn" onclick="openQuickAdd()">➕</button>
+
+        <!-- 快速录入弹窗 -->
+        <div id="quickAddModal" class="quick-add-modal">
+            <div class="quick-add-content">
+                <div class="modal-header">
+                    <div class="modal-title">快速录入</div>
+                    <button class="modal-close" onclick="closeQuickAdd()">✕</button>
+                </div>
+
+                <!-- 体温记录 -->
+                <div class="form-section">
+                    <div class="form-section-title">🌡️ 体温记录</div>
+                    <div class="form-group">
+                        <label class="form-label">体温 (℃)</label>
+                        <input type="number" class="form-input" id="temperatureInput" placeholder="请输入体温" step="0.1" min="35" max="42">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">测量部位</label>
+                        <div class="tag-group">
+                            <button class="tag-btn" onclick="selectTag(this, 'measure-part')">腋下</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'measure-part')">口腔</button>
+                            <button class="tag-btn active" onclick="selectTag(this, 'measure-part')">耳温</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'measure-part')">肛温</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 用药记录 -->
+                <div class="form-section">
+                    <div class="form-section-title">💊 用药记录</div>
+                    <div class="form-group">
+                        <label class="form-label">药品名称</label>
+                        <input type="text" class="form-input" id="medicineNameInput" placeholder="请输入药品名称">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">剂量</label>
+                        <input type="text" class="form-input" id="dosageInput" placeholder="例如: 5ml">
+                    </div>
+                </div>
+
+                <!-- 症状记录 -->
+                <div class="form-section">
+                    <div class="form-section-title">📝 症状记录</div>
+                    <div class="form-group">
+                        <label class="form-label">症状类型</label>
+                        <div class="tag-group">
+                            <button class="tag-btn" onclick="toggleTag(this)">咳嗽</button>
+                            <button class="tag-btn" onclick="toggleTag(this)">流涕</button>
+                            <button class="tag-btn" onclick="toggleTag(this)">呕吐</button>
+                            <button class="tag-btn" onclick="toggleTag(this)">腹泻</button>
+                            <button class="tag-btn" onclick="toggleTag(this)">皮疹</button>
+                            <button class="tag-btn" onclick="toggleTag(this)">发热</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">详细描述</label>
+                        <textarea class="form-textarea" id="symptomDescInput" placeholder="请描述症状详情..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 提交按钮 -->
+                <button class="submit-btn" onclick="submitQuickAdd()">保存记录</button>
+            </div>
+        </div>
+
+        <!-- 添加儿童弹窗 -->
+        <div id="addChildModal" class="quick-add-modal">
+            <div class="quick-add-content">
+                <div class="modal-header">
+                    <div class="modal-title">添加儿童档案</div>
+                    <button class="modal-close" onclick="closeAddChildForm()">✕</button>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-group">
+                        <label class="form-label">姓名 *</label>
+                        <input type="text" class="form-input" id="childNameInput" placeholder="请输入孩子姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">性别 *</label>
+                        <div class="tag-group">
+                            <button class="tag-btn active" onclick="selectTag(this, 'child-gender')">男</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'child-gender')">女</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">出生日期 *</label>
+                        <input type="date" class="form-input" id="childBirthdayInput">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">血型</label>
+                        <div class="tag-group">
+                            <button class="tag-btn" onclick="selectTag(this, 'child-blood')">A型</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'child-blood')">B型</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'child-blood')">AB型</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'child-blood')">O型</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">过敏史</label>
+                        <textarea class="form-textarea" id="childAllergyInput" placeholder="请输入过敏史(如无过敏请填写'无')"></textarea>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="submitAddChild()">保存档案</button>
+            </div>
+        </div>
+
+        <!-- 邀请成员弹窗 -->
+        <div id="addMemberModal" class="quick-add-modal">
+            <div class="quick-add-content">
+                <div class="modal-header">
+                    <div class="modal-title">邀请家庭成员</div>
+                    <button class="modal-close" onclick="closeAddMemberForm()">✕</button>
+                </div>
+
+                <div class="form-section">
+                    <div class="form-group">
+                        <label class="form-label">成员姓名 *</label>
+                        <input type="text" class="form-input" id="memberNameInput" placeholder="请输入成员姓名">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">成员角色</label>
+                        <div class="tag-group">
+                            <button class="tag-btn active" onclick="selectTag(this, 'member-role')">爸爸</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'member-role')">妈妈</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'member-role')">爷爷</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'member-role')">奶奶</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'member-role')">外公</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'member-role')">外婆</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">权限设置 *</label>
+                        <div class="tag-group">
+                            <button class="tag-btn active" onclick="selectTag(this, 'member-permission')">管理员</button>
+                            <button class="tag-btn" onclick="selectTag(this, 'member-permission')">查看权限</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">邀请方式</label>
+                        <div style="display: flex; gap: 12px; margin-top: 8px;">
+                            <button onclick="inviteByQRCode()" style="flex: 1; padding: 12px; border: 2px solid var(--border-color); background: white; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                                <div style="font-size: 24px; margin-bottom: 4px;">📱</div>
+                                <div style="font-size: 14px; font-weight: 600;">二维码邀请</div>
+                            </button>
+                            <button onclick="inviteByLink()" style="flex: 1; padding: 12px; border: 2px solid var(--border-color); background: white; border-radius: 12px; cursor: pointer; transition: all 0.3s ease;">
+                                <div style="font-size: 24px; margin-bottom: 4px;">🔗</div>
+                                <div style="font-size: 14px; font-weight: 600;">链接邀请</div>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="submit-btn" onclick="submitAddMember()">发送邀请</button>
+            </div>
+        </div>
+
+        <!-- 儿童档案详情弹窗 -->
+        <div id="childDetailModal" class="quick-add-modal">
+            <div class="quick-add-content">
+                <div class="modal-header">
+                    <div class="modal-title">儿童档案详情</div>
+                    <button class="modal-close" onclick="closeChildDetail()">✕</button>
+                </div>
+
+                <div class="form-section">
+                    <div style="text-align: center; margin-bottom: 24px;">
+                        <div id="childDetailAvatar" style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%); display: inline-flex; align-items: center; justify-content: center; font-size: 40px; margin-bottom: 12px;">👶</div>
+                        <div id="childDetailName" style="font-size: 24px; font-weight: 700;"></div>
+                    </div>
+
+                    <div style="background: #F8F9FA; border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: var(--text-secondary); font-size: 14px;">性别</span>
+                            <span id="childDetailGender" style="font-weight: 600;"></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: var(--text-secondary); font-size: 14px;">出生日期</span>
+                            <span id="childDetailBirthday" style="font-weight: 600;"></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: var(--text-secondary); font-size: 14px;">年龄</span>
+                            <span id="childDetailAge" style="font-weight: 600;"></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <span style="color: var(--text-secondary); font-size: 14px;">血型</span>
+                            <span id="childDetailBlood" style="font-weight: 600;"></span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-secondary); font-size: 14px;">过敏史</span>
+                            <span id="childDetailAllergy" style="font-weight: 600;"></span>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px;">
+                        <button onclick="editChildDetail()" style="flex: 1; padding: 12px; border: 2px solid var(--theme-primary, var(--primary-color)); background: white; color: var(--theme-primary, var(--primary-color)); border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">编辑档案</button>
+                        <button onclick="deleteChildDetail()" style="flex: 1; padding: 12px; border: 2px solid var(--danger-color); background: white; color: var(--danger-color); border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer;">删除档案</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="switchPage('home')">
+                <div class="icon">🏠</div>
+                <div class="label">首页</div>
+            </button>
+            <button class="nav-item" onclick="switchPage('temperature')">
+                <div class="icon">🌡️</div>
+                <div class="label">体温</div>
+            </button>
+            <button class="nav-item" onclick="switchPage('medicine')">
+                <div class="icon">💊</div>
+                <div class="label">用药</div>
+            </button>
+            <button class="nav-item" onclick="switchPage('profile')">
+                <div class="icon">👤</div>
+                <div class="label">我的</div>
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // 当前健康状态
+        let currentHealthStatus = 'fever'; // healthy, low-fever, fever
+
+        // 根据体温判断健康状态
+        function getHealthStatus(temperature) {
+            if (temperature < 37.3) {
+                return 'healthy';
+            } else if (temperature < 38.5) {
+                return 'low-fever';
+            } else {
+                return 'fever';
+            }
+        }
+
+        // 应用主题
+        function applyTheme(status) {
+            const appContainer = document.querySelector('.app-container');
+            
+            // 移除所有主题类
+            appContainer.classList.remove('theme-healthy', 'theme-fever', 'theme-low-fever');
+            
+            // 添加新主题类
+            appContainer.classList.add(`theme-${status}`);
+            
+            // 更新状态指示器
+            updateStatusIndicator(status);
+        }
+
+        // 更新状态指示器
+        function updateStatusIndicator(status) {
+            const statusTexts = {
+                'healthy': '🟢 健康状态良好',
+                'low-fever': '🟡 低热状态',
+                'fever': '🔴 发热状态'
+            };
+            
+            const statusColors = {
+                'healthy': '#7ED321',
+                'low-fever': '#F5A623',
+                'fever': '#D0021B'
+            };
+
+            // 更新状态指示器文本
+            const indicator = document.getElementById('statusIndicator');
+            if (indicator) {
+                indicator.textContent = statusTexts[status];
+            }
+
+            console.log(`当前状态: ${statusTexts[status]}`);
+        }
+
+        // 切换主题(测试用)
+        function changeTheme(status) {
+            currentHealthStatus = status;
+            applyTheme(status);
+            
+            // 更新体温显示(模拟)
+            const temps = {
+                'healthy': '36.8℃',
+                'low-fever': '37.8℃',
+                'fever': '38.5℃'
+            };
+            
+            const tempValue = document.querySelector('.overview-card.temperature .value');
+            if (tempValue) {
+                tempValue.textContent = temps[status];
+            }
+        }
+
+        // 显示功能页面
+        function showFeature(feature) {
+            const featureNames = {
+                'children': '儿童档案',
+                'members': '家庭成员',
+                'vaccine': '疫苗接种',
+                'knowledge': '健康知识库',
+                'hospital': '就医记录',
+                'export': '数据导出',
+                'backup': '数据备份',
+                'settings': '系统设置',
+                'feedback': '意见反馈',
+                'about': '关于我们'
+            };
+            
+            alert(`${featureNames[feature]}功能开发中...\n\n即将上线,敬请期待!`);
+        }
+
+        // 显示添加儿童表单
+        function showAddChildForm() {
+            document.getElementById('addChildModal').classList.add('active');
+        }
+
+        function closeAddChildForm() {
+            document.getElementById('addChildModal').classList.remove('active');
+        }
+
+        // 提交添加儿童
+        function submitAddChild() {
+            const name = document.getElementById('childNameInput').value;
+            const birthday = document.getElementById('childBirthdayInput').value;
+            
+            // 获取选中的性别
+            let gender = '男';
+            document.querySelectorAll('#addChildModal .tag-group')[0].querySelectorAll('.tag-btn').forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    gender = btn.textContent;
+                }
+            });
+            
+            // 获取选中的血型
+            let bloodType = '';
+            document.querySelectorAll('#addChildModal .tag-group')[1].querySelectorAll('.tag-btn').forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    bloodType = btn.textContent;
+                }
+            });
+            
+            const allergy = document.getElementById('childAllergyInput').value;
+            
+            // 验证必填项
+            if (!name) {
+                alert('请输入孩子姓名!');
+                return;
+            }
+            
+            if (!birthday) {
+                alert('请选择出生日期!');
+                return;
+            }
+            
+            // 模拟保存
+            alert(`儿童档案保存成功!\n\n姓名: ${name}\n性别: ${gender}\n出生日期: ${birthday}\n血型: ${bloodType || '未填写'}\n过敏史: ${allergy || '无'}`);
+            closeAddChildForm();
+            
+            // 清空表单
+            document.getElementById('childNameInput').value = '';
+            document.getElementById('childBirthdayInput').value = '';
+            document.getElementById('childAllergyInput').value = '';
+            document.querySelectorAll('#addChildModal .tag-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        // 点击弹窗背景关闭
+        document.getElementById('addChildModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddChildForm();
+            }
+        });
+
+        // 显示添加成员表单
+        function showAddMemberForm() {
+            document.getElementById('addMemberModal').classList.add('active');
+        }
+
+        function closeAddMemberForm() {
+            document.getElementById('addMemberModal').classList.remove('active');
+        }
+
+        // 邀请方式
+        function inviteByQRCode() {
+            alert('二维码邀请\n\n功能开发中...\n\n即将上线,敬请期待!');
+        }
+
+        function inviteByLink() {
+            alert('链接邀请\n\n功能开发中...\n\n即将上线,敬请期待!');
+        }
+
+        // 提交添加成员
+        function submitAddMember() {
+            const name = document.getElementById('memberNameInput').value;
+            
+            // 获取选中的角色
+            let role = '爸爸';
+            document.querySelectorAll('#addMemberModal .tag-group')[0].querySelectorAll('.tag-btn').forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    role = btn.textContent;
+                }
+            });
+            
+            // 获取选中的权限
+            let permission = '管理员';
+            document.querySelectorAll('#addMemberModal .tag-group')[1].querySelectorAll('.tag-btn').forEach(btn => {
+                if (btn.classList.contains('active')) {
+                    permission = btn.textContent;
+                }
+            });
+            
+            // 验证必填项
+            if (!name) {
+                alert('请输入成员姓名!');
+                return;
+            }
+            
+            // 模拟保存
+            alert(`邀请发送成功!\n\n成员姓名: ${name}\n角色: ${role}\n权限: ${permission}`);
+            closeAddMemberForm();
+            
+            // 清空表单
+            document.getElementById('memberNameInput').value = '';
+            document.querySelectorAll('#addMemberModal .tag-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        // 点击弹窗背景关闭
+        document.getElementById('addMemberModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeAddMemberForm();
+            }
+        });
+
+        // 编辑儿童档案
+        function editChild(childId) {
+            const childData = {
+                'child1': {
+                    name: '小明',
+                    gender: '男',
+                    birthday: '2023-01-15',
+                    age: '3岁',
+                    blood: 'A型',
+                    allergy: '无',
+                    avatar: '👶',
+                    avatarBg: 'linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%)'
+                },
+                'child2': {
+                    name: '小红',
+                    gender: '女',
+                    birthday: '2021-03-20',
+                    age: '5岁',
+                    blood: 'B型',
+                    allergy: '青霉素',
+                    avatar: '👧',
+                    avatarBg: 'linear-gradient(135deg, #B0E0E6 0%, #ADD8E6 100%)'
+                }
+            };
+            
+            const child = childData[childId];
+            if (child) {
+                document.getElementById('childDetailName').textContent = child.name;
+                document.getElementById('childDetailGender').textContent = child.gender;
+                document.getElementById('childDetailBirthday').textContent = child.birthday;
+                document.getElementById('childDetailAge').textContent = child.age;
+                document.getElementById('childDetailBlood').textContent = child.blood;
+                document.getElementById('childDetailAllergy').textContent = child.allergy;
+                document.getElementById('childDetailAvatar').textContent = child.avatar;
+                document.getElementById('childDetailAvatar').style.background = child.avatarBg;
+                
+                // 保存当前编辑的儿童ID
+                document.getElementById('childDetailModal').dataset.childId = childId;
+                
+                document.getElementById('childDetailModal').classList.add('active');
+            }
+        }
+
+        function closeChildDetail() {
+            document.getElementById('childDetailModal').classList.remove('active');
+        }
+
+        function editChildDetail() {
+            const childId = document.getElementById('childDetailModal').dataset.childId;
+            alert(`编辑儿童档案\n\n功能开发中...\n\n即将上线,敬请期待!`);
+        }
+
+        function deleteChildDetail() {
+            const childId = document.getElementById('childDetailModal').dataset.childId;
+            const childName = document.getElementById('childDetailName').textContent;
+            
+            if (confirm(`确定要删除${childName}的档案吗?\n\n删除后将无法恢复!`)) {
+                alert('档案已删除!');
+                closeChildDetail();
+            }
+        }
+
+        // 点击弹窗背景关闭
+        document.getElementById('childDetailModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeChildDetail();
+            }
+        });
+
+        // 快速录入功能
+        function openQuickAdd() {
+            document.getElementById('quickAddModal').classList.add('active');
+        }
+
+        function closeQuickAdd() {
+            document.getElementById('quickAddModal').classList.remove('active');
+        }
+
+        // 单选标签
+        function selectTag(element, group) {
+            // 移除同组其他标签的active状态
+            const siblings = element.parentElement.querySelectorAll('.tag-btn');
+            siblings.forEach(btn => btn.classList.remove('active'));
+            // 添加当前标签的active状态
+            element.classList.add('active');
+        }
+
+        // 多选标签
+        function toggleTag(element) {
+            element.classList.toggle('active');
+        }
+
+        // 提交快速录入
+        function submitQuickAdd() {
+            const temperature = document.getElementById('temperatureInput').value;
+            const medicineName = document.getElementById('medicineNameInput').value;
+            const dosage = document.getElementById('dosageInput').value;
+            const symptomDesc = document.getElementById('symptomDescInput').value;
+            
+            // 获取选中的症状
+            const selectedSymptoms = [];
+            document.querySelectorAll('.form-section:last-of-type .tag-btn.active').forEach(btn => {
+                selectedSymptoms.push(btn.textContent);
+            });
+
+            // 验证至少填写一项
+            if (!temperature && !medicineName && selectedSymptoms.length === 0) {
+                alert('请至少填写一项记录!');
+                return;
+            }
+
+            // 模拟保存
+            let message = '记录保存成功!\n\n';
+            if (temperature) {
+                message += `体温: ${temperature}℃\n`;
+                // 根据体温自动切换主题
+                const status = getHealthStatus(parseFloat(temperature));
+                changeTheme(status);
+            }
+            if (medicineName) {
+                message += `用药: ${medicineName} ${dosage}\n`;
+            }
+            if (selectedSymptoms.length > 0) {
+                message += `症状: ${selectedSymptoms.join('、')}\n`;
+            }
+            if (symptomDesc) {
+                message += `描述: ${symptomDesc}\n`;
+            }
+
+            alert(message);
+            closeQuickAdd();
+            
+            // 清空表单
+            document.getElementById('temperatureInput').value = '';
+            document.getElementById('medicineNameInput').value = '';
+            document.getElementById('dosageInput').value = '';
+            document.getElementById('symptomDescInput').value = '';
+            document.querySelectorAll('.tag-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        // 点击弹窗背景关闭
+        document.getElementById('quickAddModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeQuickAdd();
+            }
+        });
+
+        // 页面切换
+        function switchPage(page) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // 移除所有导航项的active状态
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            
+            // 显示对应页面
+            const pageMap = {
+                'home': 'homePage',
+                'temperature': 'temperaturePage',
+                'medicine': 'medicinePage',
+                'profile': 'profilePage'
+            };
+            
+            document.getElementById(pageMap[page]).classList.add('active');
+            
+            // 设置对应导航项为active
+            const navItems = document.querySelectorAll('.nav-item');
+            const index = ['home', 'temperature', 'medicine', 'profile'].indexOf(page);
+            if (index >= 0) {
+                navItems[index].classList.add('active');
+            }
+
+            // 如果是体温页面,绘制图表
+            if (page === 'temperature') {
+                drawTemperatureChart();
+            }
+        }
+
+        // 绘制体温曲线图
+        function drawTemperatureChart() {
+            const canvas = document.getElementById('temperatureChart');
+            const ctx = canvas.getContext('2d');
+            
+            // 设置canvas尺寸
+            canvas.width = canvas.offsetWidth * 2;
+            canvas.height = canvas.offsetHeight * 2;
+            ctx.scale(2, 2);
+            
+            const width = canvas.offsetWidth;
+            const height = canvas.offsetHeight;
+            
+            // 清空画布
+            ctx.clearRect(0, 0, width, height);
+            
+            // 数据
+            const data = [
+                { time: '06:00', temp: 38.0 },
+                { time: '08:00', temp: 38.2 },
+                { time: '10:00', temp: 38.5 },
+                { time: '12:00', temp: 38.8 },
+                { time: '14:00', temp: 39.2 },
+                { time: '16:00', temp: 38.9 },
+                { time: '18:00', temp: 38.5 }
+            ];
+            
+            // 绘制参数
+            const padding = { top: 20, right: 20, bottom: 30, left: 40 };
+            const chartWidth = width - padding.left - padding.right;
+            const chartHeight = height - padding.top - padding.bottom;
+            
+            // 温度范围
+            const minTemp = 36.5;
+            const maxTemp = 40;
+            const tempRange = maxTemp - minTemp;
+            
+            // 绘制网格线
+            ctx.strokeStyle = '#E0E0E0';
+            ctx.lineWidth = 1;
+            
+            for (let i = 0; i <= 4; i++) {
+                const y = padding.top + (chartHeight / 4) * i;
+                ctx.beginPath();
+                ctx.moveTo(padding.left, y);
+                ctx.lineTo(width - padding.right, y);
+                ctx.stroke();
+                
+                // 温度标签
+                const temp = maxTemp - (tempRange / 4) * i;
+                ctx.fillStyle = '#999999';
+                ctx.font = '10px Nunito';
+                ctx.textAlign = 'right';
+                ctx.fillText(temp.toFixed(1) + '℃', padding.left - 5, y + 3);
+            }
+            
+            // 绘制折线
+            ctx.beginPath();
+            ctx.strokeStyle = '#4A90E2';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            data.forEach((point, index) => {
+                const x = padding.left + (chartWidth / (data.length - 1)) * index;
+                const y = padding.top + chartHeight - ((point.temp - minTemp) / tempRange) * chartHeight;
+                
+                if (index === 0) {
+                    ctx.moveTo(x, y);
+                } else {
+                    ctx.lineTo(x, y);
+                }
+            });
+            
+            ctx.stroke();
+            
+            // 绘制数据点
+            data.forEach((point, index) => {
+                const x = padding.left + (chartWidth / (data.length - 1)) * index;
+                const y = padding.top + chartHeight - ((point.temp - minTemp) / tempRange) * chartHeight;
+                
+                // 根据温度设置颜色
+                let color = '#7ED321'; // 正常
+                if (point.temp >= 39) {
+                    color = '#D0021B'; // 高热
+                } else if (point.temp >= 38) {
+                    color = '#F5A623'; // 中热
+                } else if (point.temp >= 37.3) {
+                    color = '#F5A623'; // 低热
+                }
+                
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+                ctx.strokeStyle = '#FFFFFF';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                // 时间标签
+                ctx.fillStyle = '#999999';
+                ctx.font = '10px Nunito';
+                ctx.textAlign = 'center';
+                ctx.fillText(point.time, x, height - 10);
+            });
+        }
+
+        // 添加记录
+        function handleAdd() {
+            const activePage = document.querySelector('.page.active').id;
+            
+            if (activePage === 'temperaturePage') {
+                showAddTemperature();
+            } else if (activePage === 'medicinePage') {
+                showAddMedicine();
+            } else {
+                showAddTemperature();
+            }
+        }
+
+        function showAddTemperature() {
+            alert('添加体温记录功能\n\n体温: 38.5℃\n测量时间: 2026-02-25 10:30\n测量部位: 腋下\n备注: 精神状态一般');
+        }
+
+        function showAddMedicine() {
+            alert('添加用药记录功能\n\n药品: 美林(布洛芬混悬液)\n剂量: 5ml\n用药时间: 2026-02-25 08:00\n\n⚠️ 上次用药: 今天 04:00\n距离间隔不足4小时!\n建议用药时间: 08:00');
+        }
+
+        function showAddSymptom() {
+            alert('添加症状记录功能\n\n症状类型: 咳嗽、流涕\n描述: 咳嗽加重,流清鼻涕\n时间: 2026-02-25 10:30');
+        }
+
+        // 时间筛选按钮点击事件
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                drawTemperatureChart();
+            });
+        });
+
+        // 页面加载完成后绘制图表
+        window.addEventListener('load', function() {
+            // 应用初始主题(根据当前体温38.5℃判断为发热状态)
+            applyTheme(currentHealthStatus);
+            
+            // 延迟绘制以确保canvas尺寸正确
+            setTimeout(() => {
+                if (document.getElementById('temperaturePage').classList.contains('active')) {
+                    drawTemperatureChart();
+                }
+            }, 100);
+        });
+
+        // 窗口大小改变时重绘图表
+        window.addEventListener('resize', function() {
+            if (document.getElementById('temperaturePage').classList.contains('active')) {
+                drawTemperatureChart();
+            }
+        });
+    </script>
+</body>
+</html>

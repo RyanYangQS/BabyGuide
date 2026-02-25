@@ -1,0 +1,104 @@
+.child-detail-page.data-v-d4c72c0e {
+  min-height: 100vh;
+  padding: 24rpx;
+}
+.child-header.data-v-d4c72c0e {
+  display: flex;
+  align-items: center;
+  margin-bottom: 32rpx;
+}
+.child-header .child-avatar.data-v-d4c72c0e {
+  width: 120rpx;
+  height: 120rpx;
+  border-radius: 50%;
+  margin-right: 24rpx;
+}
+.child-header .child-info.data-v-d4c72c0e {
+  flex: 1;
+}
+.child-header .child-name.data-v-d4c72c0e {
+  font-size: 36rpx;
+  font-weight: bold;
+  color: #333333;
+  display: block;
+  margin-bottom: 8rpx;
+}
+.child-header .child-meta.data-v-d4c72c0e {
+  font-size: 26rpx;
+  color: #666666;
+}
+.child-header .edit-btn.data-v-d4c72c0e {
+  font-size: 28rpx;
+  color: #4A90E2;
+  padding: 8rpx 24rpx;
+  border: 2rpx solid #4A90E2;
+  border-radius: 999rpx;
+}
+.info-section.data-v-d4c72c0e {
+  margin-bottom: 32rpx;
+}
+.info-section .section-title.data-v-d4c72c0e {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 24rpx;
+}
+.info-section .info-item.data-v-d4c72c0e {
+  display: flex;
+  padding: 16rpx 0;
+  border-bottom: 1rpx solid #E8E8E8;
+}
+.info-section .info-item.data-v-d4c72c0e:last-child {
+  border-bottom: none;
+}
+.info-section .info-item .info-label.data-v-d4c72c0e {
+  width: 160rpx;
+  font-size: 28rpx;
+  color: #666666;
+}
+.info-section .info-item .info-value.data-v-d4c72c0e {
+  flex: 1;
+  font-size: 28rpx;
+  color: #333333;
+}
+.stats-section.data-v-d4c72c0e {
+  margin-bottom: 32rpx;
+}
+.stats-section .section-title.data-v-d4c72c0e {
+  font-size: 32rpx;
+  font-weight: bold;
+  color: #333333;
+  margin-bottom: 24rpx;
+}
+.stats-section .stats-grid.data-v-d4c72c0e {
+  display: flex;
+}
+.stats-section .stats-grid .stats-item.data-v-d4c72c0e {
+  flex: 1;
+  text-align: center;
+  padding: 24rpx;
+}
+.stats-section .stats-grid .stats-item .stats-value.data-v-d4c72c0e {
+  font-size: 48rpx;
+  font-weight: bold;
+  color: #4A90E2;
+  display: block;
+  margin-bottom: 8rpx;
+}
+.stats-section .stats-grid .stats-item .stats-label.data-v-d4c72c0e {
+  font-size: 26rpx;
+  color: #666666;
+}
+.action-section.data-v-d4c72c0e {
+  padding: 32rpx;
+}
+.action-section .btn-delete.data-v-d4c72c0e {
+  width: 100%;
+  height: 88rpx;
+  line-height: 88rpx;
+  background-color: #FFFFFF;
+  color: #FF4D4F;
+  font-size: 28rpx;
+  border-radius: 999rpx;
+  border: 2rpx solid #FF4D4F;
+}

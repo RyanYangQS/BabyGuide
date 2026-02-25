@@ -1,0 +1,49 @@
+// 主题色变量
+$primary-color: #4A90E2;
+$success-color: #52C41A;
+$warning-color: #FAAD14;
+$error-color: #FF4D4F;
+$text-color: #333333;
+$text-secondary: #666666;
+$text-light: #999999;
+$border-color: #E8E8E8;
+$background-color: #F8F9FA;
+
+// 健康状态主题
+$healthy-primary: #52C41A;
+$healthy-light: #F6FFED;
+$healthy-border: #B7EB8F;
+
+$low-fever-primary: #FAAD14;
+$low-fever-light: #FFFBE6;
+$low-fever-border: #FFE58F;
+
+$fever-primary: #FF4D4F;
+$fever-light: #FFF2F0;
+$fever-border: #FFCCC7;
+
+// 间距变量
+$spacing-xs: 8rpx;
+$spacing-sm: 16rpx;
+$spacing-md: 24rpx;
+$spacing-lg: 32rpx;
+$spacing-xl: 48rpx;
+
+// 圆角变量
+$radius-sm: 8rpx;
+$radius-md: 16rpx;
+$radius-lg: 24rpx;
+$radius-full: 999rpx;
+
+// 字体大小
+$font-xs: 22rpx;
+$font-sm: 26rpx;
+$font-md: 28rpx;
+$font-lg: 32rpx;
+$font-xl: 36rpx;
+$font-xxl: 44rpx;
+
+// 阴影
+$shadow-sm: 0 2rpx 8rpx rgba(0, 0, 0, 0.08);
+$shadow-md: 0 4rpx 16rpx rgba(0, 0, 0, 0.1);
+$shadow-lg: 0 8rpx 24rpx rgba(0, 0, 0, 0.12);
