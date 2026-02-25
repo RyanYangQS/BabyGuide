@@ -2,14 +2,15 @@
   "easycom": {
     "autoscan": true,
     "custom": {
-      "^u-(.*)": "uview-plus/components/u-$1/u-$1.vue"
+      "^u-(.*)": "uview-plus/components/u-$1/u-$1.vue",
+      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
     }
   },
   "pages": [
     {
       "path": "pages/index/index",
       "style": {
-        "navigationBarTitleText": "儿童健康管理",
+        "navigationBarTitleText": "养娃不易",
         "navigationBarBackgroundColor": "#FFFFFF",
         "navigationBarTextStyle": "black"
       }
@@ -89,7 +90,7 @@
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "儿童健康管理",
+    "navigationBarTitleText": "养娃不易",
     "navigationBarBackgroundColor": "#FFFFFF",
     "backgroundColor": "#F8F9FA"
   },

@@ -1,0 +1,43 @@
+.custom-tabbar.data-v-686b695e {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100rpx;
+  background: #FFFFFF;
+  display: flex;
+  border-top: 1rpx solid #EEEEEE;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 999;
+}
+.tabbar-item.data-v-686b695e {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8rpx 0;
+}
+.tabbar-item .tabbar-icon.data-v-686b695e {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 4rpx;
+}
+.tabbar-item .tabbar-icon .icon-emoji.data-v-686b695e {
+  font-size: 40rpx;
+}
+.tabbar-item .tabbar-text.data-v-686b695e {
+  font-size: 22rpx;
+  color: #999999;
+}
+.tabbar-item.active .tabbar-icon .icon-emoji.data-v-686b695e {
+  transform: scale(1.15);
+}
+.tabbar-item.active .tabbar-text.data-v-686b695e {
+  color: #4A90E2;
+  font-weight: 600;
+}

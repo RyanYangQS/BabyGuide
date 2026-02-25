@@ -1,4 +1,4 @@
-# 儿童健康管理小程序 - 技术方案(uni-app + 微信云开发)
+# 养娃不易小程序 - 技术方案(uni-app + 微信云开发)
 
 ## 一、技术栈选型
 
@@ -1484,9 +1484,9 @@ function goToSymptom() {
 
 ```json
 {
-  "name": "儿童健康管理",
+  "name": "养娃不易",
   "appid": "__UNI__XXXXXXX",
-  "description": "儿童健康管理小程序",
+  "description": "养娃不易小程序",
   "versionName": "1.0.0",
   "versionCode": "100",
   "transformPx": false,
@@ -1601,7 +1601,7 @@ function goToSymptom() {
   },
   "globalStyle": {
     "navigationBarTextStyle": "black",
-    "navigationBarTitleText": "儿童健康管理",
+    "navigationBarTitleText": "养娃不易",
     "navigationBarBackgroundColor": "#FFFFFF",
     "backgroundColor": "#F8F9FA"
   }
@@ -1654,7 +1654,7 @@ function goToSymptom() {
   },
   "appid": "your-wechat-appid",
   "projectname": "baby-guide",
-  "description": "儿童健康管理小程序",
+  "description": "养娃不易小程序",
   "cloudfunctionTemplateRoot": "",
   "condition": {},
   "editorSetting": {
