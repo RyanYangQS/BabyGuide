@@ -6,6 +6,7 @@
     "temperature-modal": "../../src/components/TemperatureModal",
     "medicine-modal": "../../src/components/MedicineModal",
     "symptom-modal": "../../src/components/SymptomModal",
-    "quick-add-modal": "../../src/components/QuickAddModal"
+    "quick-add-modal": "../../src/components/QuickAddModal",
+    "child-switch-modal": "../../src/components/ChildSwitchModal"
   }
 }

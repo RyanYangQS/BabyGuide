@@ -58,6 +58,24 @@
   font-size: 24rpx;
   color: rgba(255, 255, 255, 0.85);
 }
+.child-card .switch-btn.data-v-1cf27b2a {
+  position: absolute;
+  right: 32rpx;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 64rpx;
+  height: 64rpx;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+.child-card .switch-btn .switch-icon.data-v-1cf27b2a {
+  font-size: 32rpx;
+  color: #fff;
+}
 .overview-section.data-v-1cf27b2a {
   padding: 32rpx;
 }

@@ -1,0 +1,113 @@
+.child-switch-modal.data-v-374326ff {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: flex;
+  align-items: flex-end;
+}
+.modal-content.data-v-374326ff {
+  width: 100%;
+  background: #fff;
+  border-radius: 32rpx 32rpx 0 0;
+  padding-bottom: constant(safe-area-inset-bottom);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.modal-header.data-v-374326ff {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 32rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+}
+.modal-header .modal-title.data-v-374326ff {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #333;
+}
+.modal-header .close-btn.data-v-374326ff {
+  width: 48rpx;
+  height: 48rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.modal-header .close-btn text.data-v-374326ff {
+  font-size: 40rpx;
+  color: #999;
+}
+.child-list.data-v-374326ff {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.child-item.data-v-374326ff {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 32rpx;
+}
+.child-item.active.data-v-374326ff {
+  background: rgba(74, 144, 226, 0.05);
+}
+.child-item .child-avatar.data-v-374326ff {
+  width: 80rpx;
+  height: 80rpx;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #4A90E2 0%, #5BA3F5 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 24rpx;
+}
+.child-item .child-avatar text.data-v-374326ff {
+  font-size: 32rpx;
+  color: #fff;
+  font-weight: bold;
+}
+.child-item .child-info.data-v-374326ff {
+  flex: 1;
+}
+.child-item .child-name.data-v-374326ff {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #333;
+  display: block;
+  margin-bottom: 4rpx;
+}
+.child-item .child-meta.data-v-374326ff {
+  font-size: 24rpx;
+  color: #999;
+}
+.child-item .check-icon.data-v-374326ff {
+  width: 40rpx;
+  height: 40rpx;
+  border-radius: 50%;
+  background: #4A90E2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.child-item .check-icon text.data-v-374326ff {
+  font-size: 24rpx;
+  color: #fff;
+}
+.add-child-btn.data-v-374326ff {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32rpx;
+  margin: 16rpx 32rpx;
+  border: 2rpx dashed #ddd;
+  border-radius: 16rpx;
+}
+.add-child-btn .add-icon.data-v-374326ff {
+  font-size: 32rpx;
+  color: #4A90E2;
+  margin-right: 8rpx;
+}
+.add-child-btn .add-text.data-v-374326ff {
+  font-size: 28rpx;
+  color: #4A90E2;
+}

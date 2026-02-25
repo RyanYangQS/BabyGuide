@@ -10,7 +10,7 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       name: "",
       phone: ""
     });
-    const childrenList = common_vendor.ref([]);
+    const childrenList = common_vendor.computed(() => childrenStore.childrenList);
     function handleLogin() {
       common_vendor.index.showToast({ title: "登录功能开发中", icon: "none" });
     }
@@ -36,31 +36,19 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       common_vendor.index.showToast({ title: `${menuMap[type]}开发中`, icon: "none" });
     }
     common_vendor.onMounted(() => {
-      if (childrenList.value.length === 0) {
-        const mockChildren = [
-          {
-            _id: "1",
-            name: "小明",
-            avatar: "",
-            gender: "male",
-            birthday: "2022-06-15",
-            createTime: (/* @__PURE__ */ new Date()).toISOString(),
-            updateTime: (/* @__PURE__ */ new Date()).toISOString()
-          },
-          {
-            _id: "2",
-            name: "小红",
-            avatar: "",
-            gender: "female",
-            birthday: "2023-03-20",
-            createTime: (/* @__PURE__ */ new Date()).toISOString(),
-            updateTime: (/* @__PURE__ */ new Date()).toISOString()
-          }
-        ];
-        childrenList.value = mockChildren;
-        childrenStore.setChildrenList(mockChildren);
+      if (childrenStore.childrenList.length === 0) {
+        const mockChild = {
+          _id: "1",
+          name: "小明",
+          avatar: "",
+          gender: "male",
+          birthday: "2022-06-15",
+          createTime: (/* @__PURE__ */ new Date()).toISOString(),
+          updateTime: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        childrenStore.setChildrenList([mockChild]);
         if (!childrenStore.currentChild) {
-          childrenStore.setCurrentChild(mockChildren[0]);
+          childrenStore.setCurrentChild(mockChild);
         }
       }
     });

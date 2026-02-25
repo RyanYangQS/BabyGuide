@@ -5,12 +5,13 @@ const src_store_modules_health = require("../../src/store/modules/health.js");
 const src_utils_theme = require("../../src/utils/theme.js");
 const src_utils_date = require("../../src/utils/date.js");
 if (!Math) {
-  (TemperatureModal + MedicineModal + SymptomModal + QuickAddModal)();
+  (TemperatureModal + MedicineModal + SymptomModal + QuickAddModal + ChildSwitchModal)();
 }
 const TemperatureModal = () => "../../src/components/TemperatureModal.js";
 const MedicineModal = () => "../../src/components/MedicineModal.js";
 const SymptomModal = () => "../../src/components/SymptomModal.js";
 const QuickAddModal = () => "../../src/components/QuickAddModal.js";
+const ChildSwitchModal = () => "../../src/components/ChildSwitchModal.js";
 const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "index",
   setup(__props) {
@@ -20,7 +21,9 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
     const showMedicineModal = common_vendor.ref(false);
     const showSymptomModal = common_vendor.ref(false);
     const showQuickAddModal = common_vendor.ref(false);
+    const showChildSwitch = common_vendor.ref(false);
     const currentChild = common_vendor.computed(() => childrenStore.currentChild);
+    const childrenList = common_vendor.computed(() => childrenStore.childrenList);
     const latestTemperature = common_vendor.computed(() => healthStore.latestTemperature);
     const todayMedicineCount = common_vendor.computed(() => healthStore.todayMedicineRecords.length);
     const todaySymptomCount = common_vendor.computed(() => healthStore.symptomRecords.length);
@@ -107,6 +110,9 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
     }
     function handleRecordSuccess() {
     }
+    function handleChildChange(child) {
+      common_vendor.index.__f__("log", "at pages/index/index.vue:240", "切换儿童:", child.name);
+    }
     function loadHealthData() {
       const mockTemperatureRecords = [
         {
@@ -150,17 +156,19 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       healthStore.setMedicineRecords(mockMedicineRecords);
     }
     function initMockData() {
-      const mockChild = {
-        _id: "1",
-        name: "小明",
-        avatar: "",
-        gender: "male",
-        birthday: "2022-06-15",
-        createTime: (/* @__PURE__ */ new Date()).toISOString(),
-        updateTime: (/* @__PURE__ */ new Date()).toISOString()
-      };
-      childrenStore.setCurrentChild(mockChild);
-      childrenStore.setChildrenList([mockChild]);
+      if (childrenStore.childrenList.length === 0) {
+        const mockChild = {
+          _id: "1",
+          name: "小明",
+          avatar: "",
+          gender: "male",
+          birthday: "2022-06-15",
+          createTime: (/* @__PURE__ */ new Date()).toISOString(),
+          updateTime: (/* @__PURE__ */ new Date()).toISOString()
+        };
+        childrenStore.setCurrentChild(mockChild);
+        childrenStore.setChildrenList([mockChild]);
+      }
       loadHealthData();
     }
     common_vendor.onMounted(() => {
@@ -182,15 +190,19 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         h: common_vendor.t(healthText.value)
       } : {}, {
         i: common_vendor.o(handleChildClick),
-        j: common_vendor.t(((_d = latestTemperature.value) == null ? void 0 : _d.temperature) || "--"),
-        k: common_vendor.t(todayMedicineCount.value),
-        l: common_vendor.t(todaySymptomCount.value),
-        m: common_vendor.o(($event) => showTemperatureModal.value = true),
-        n: common_vendor.o(($event) => showMedicineModal.value = true),
-        o: common_vendor.o(($event) => showSymptomModal.value = true),
-        p: recentRecords.value.length > 0
+        j: childrenList.value.length > 1
+      }, childrenList.value.length > 1 ? {
+        k: common_vendor.o(($event) => showChildSwitch.value = true)
+      } : {}, {
+        l: common_vendor.t(((_d = latestTemperature.value) == null ? void 0 : _d.temperature) || "--"),
+        m: common_vendor.t(todayMedicineCount.value),
+        n: common_vendor.t(todaySymptomCount.value),
+        o: common_vendor.o(($event) => showTemperatureModal.value = true),
+        p: common_vendor.o(($event) => showMedicineModal.value = true),
+        q: common_vendor.o(($event) => showSymptomModal.value = true),
+        r: recentRecords.value.length > 0
       }, recentRecords.value.length > 0 ? {
-        q: common_vendor.f(recentRecords.value, (record, k0, i0) => {
+        s: common_vendor.f(recentRecords.value, (record, k0, i0) => {
           return {
             a: common_vendor.t(record.icon),
             b: common_vendor.t(record.title),
@@ -201,28 +213,33 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           };
         })
       } : {}, {
-        r: common_vendor.o(($event) => showQuickAddModal.value = true),
-        s: common_vendor.o(handleRecordSuccess),
-        t: common_vendor.o(($event) => showTemperatureModal.value = $event),
-        v: common_vendor.p({
+        t: common_vendor.o(($event) => showQuickAddModal.value = true),
+        v: common_vendor.o(handleRecordSuccess),
+        w: common_vendor.o(($event) => showTemperatureModal.value = $event),
+        x: common_vendor.p({
           show: showTemperatureModal.value
         }),
-        w: common_vendor.o(handleRecordSuccess),
-        x: common_vendor.o(($event) => showMedicineModal.value = $event),
-        y: common_vendor.p({
+        y: common_vendor.o(handleRecordSuccess),
+        z: common_vendor.o(($event) => showMedicineModal.value = $event),
+        A: common_vendor.p({
           show: showMedicineModal.value
         }),
-        z: common_vendor.o(handleRecordSuccess),
-        A: common_vendor.o(($event) => showSymptomModal.value = $event),
-        B: common_vendor.p({
+        B: common_vendor.o(handleRecordSuccess),
+        C: common_vendor.o(($event) => showSymptomModal.value = $event),
+        D: common_vendor.p({
           show: showSymptomModal.value
         }),
-        C: common_vendor.o(handleRecordSuccess),
-        D: common_vendor.o(($event) => showQuickAddModal.value = $event),
-        E: common_vendor.p({
+        E: common_vendor.o(handleRecordSuccess),
+        F: common_vendor.o(($event) => showQuickAddModal.value = $event),
+        G: common_vendor.p({
           show: showQuickAddModal.value
         }),
-        F: common_vendor.n(themeClass.value)
+        H: common_vendor.o(handleChildChange),
+        I: common_vendor.o(($event) => showChildSwitch.value = $event),
+        J: common_vendor.p({
+          show: showChildSwitch.value
+        }),
+        K: common_vendor.n(themeClass.value)
       });
     };
   }

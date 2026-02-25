@@ -10,6 +10,10 @@
           <text class="child-status" v-if="currentChild">{{ healthStatusEmoji }} {{ healthText }}</text>
         </view>
       </view>
+      <!-- 切换儿童按钮 -->
+      <view class="switch-btn" v-if="childrenList.length > 1" @click="showChildSwitch = true">
+        <text class="switch-icon">⇅</text>
+      </view>
     </view>
 
     <!-- 今日概览 -->
@@ -97,6 +101,12 @@
       v-model:show="showQuickAddModal" 
       @success="handleRecordSuccess"
     />
+    
+    <!-- 儿童切换弹窗 -->
+    <ChildSwitchModal 
+      v-model:show="showChildSwitch"
+      @change="handleChildChange"
+    />
   </view>
 </template>
 
@@ -110,6 +120,8 @@ import TemperatureModal from '../../src/components/TemperatureModal.vue'
 import MedicineModal from '../../src/components/MedicineModal.vue'
 import SymptomModal from '../../src/components/SymptomModal.vue'
 import QuickAddModal from '../../src/components/QuickAddModal.vue'
+import ChildSwitchModal from '../../src/components/ChildSwitchModal.vue'
+import type { Child } from '../../src/types'
 
 const childrenStore = useChildrenStore()
 const healthStore = useHealthStore()
@@ -119,9 +131,11 @@ const showTemperatureModal = ref(false)
 const showMedicineModal = ref(false)
 const showSymptomModal = ref(false)
 const showQuickAddModal = ref(false)
+const showChildSwitch = ref(false)
 
 // 当前儿童
 const currentChild = computed(() => childrenStore.currentChild)
+const childrenList = computed(() => childrenStore.childrenList)
 const latestTemperature = computed(() => healthStore.latestTemperature)
 const todayMedicineCount = computed(() => healthStore.todayMedicineRecords.length)
 const todaySymptomCount = computed(() => healthStore.symptomRecords.length)
@@ -221,6 +235,11 @@ function handleRecordSuccess() {
   // 数据已通过 store 更新
 }
 
+function handleChildChange(child: Child) {
+  // 切换儿童后重新加载数据
+  console.log('切换儿童:', child.name)
+}
+
 function loadHealthData() {
   const mockTemperatureRecords = [
     {
@@ -267,18 +286,22 @@ function loadHealthData() {
 }
 
 function initMockData() {
-  const mockChild = {
-    _id: '1',
-    name: '小明',
-    avatar: '',
-    gender: 'male' as const,
-    birthday: '2022-06-15',
-    createTime: new Date().toISOString(),
-    updateTime: new Date().toISOString()
+  // 只初始化一个默认儿童
+  if (childrenStore.childrenList.length === 0) {
+    const mockChild = {
+      _id: '1',
+      name: '小明',
+      avatar: '',
+      gender: 'male' as const,
+      birthday: '2022-06-15',
+      createTime: new Date().toISOString(),
+      updateTime: new Date().toISOString()
+    }
+    
+    childrenStore.setCurrentChild(mockChild)
+    childrenStore.setChildrenList([mockChild])
   }
   
-  childrenStore.setCurrentChild(mockChild)
-  childrenStore.setChildrenList([mockChild])
   loadHealthData()
 }
 
@@ -354,6 +377,26 @@ onMounted(() => {
   .child-status {
     font-size: 24rpx;
     color: rgba(255, 255, 255, 0.85);
+  }
+  
+  .switch-btn {
+    position: absolute;
+    right: 32rpx;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 64rpx;
+    height: 64rpx;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    
+    .switch-icon {
+      font-size: 32rpx;
+      color: #fff;
+    }
   }
 }
 

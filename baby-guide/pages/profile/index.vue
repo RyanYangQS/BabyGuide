@@ -94,7 +94,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useChildrenStore } from '../../src/store/modules/children'
 import { formatAge } from '../../src/utils/date'
 import type { Child } from '../../src/types'
@@ -107,8 +107,8 @@ const userInfo = ref({
   phone: ''
 })
 
-// 儿童列表
-const childrenList = ref<Child[]>([])
+// 儿童列表 - 使用 store 中的数据
+const childrenList = computed(() => childrenStore.childrenList)
 
 /**
  * 登录
@@ -152,34 +152,23 @@ function handleMenuClick(type: string) {
 }
 
 onMounted(() => {
-  // 加载模拟数据
-  if (childrenList.value.length === 0) {
-    const mockChildren: Child[] = [
-      {
-        _id: '1',
-        name: '小明',
-        avatar: '',
-        gender: 'male',
-        birthday: '2022-06-15',
-        createTime: new Date().toISOString(),
-        updateTime: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        name: '小红',
-        avatar: '',
-        gender: 'female',
-        birthday: '2023-03-20',
-        createTime: new Date().toISOString(),
-        updateTime: new Date().toISOString()
-      }
-    ]
-    childrenList.value = mockChildren
-    childrenStore.setChildrenList(mockChildren)
+  // 加载模拟数据 - 只初始化一个默认儿童
+  if (childrenStore.childrenList.length === 0) {
+    const mockChild: Child = {
+      _id: '1',
+      name: '小明',
+      avatar: '',
+      gender: 'male',
+      birthday: '2022-06-15',
+      createTime: new Date().toISOString(),
+      updateTime: new Date().toISOString()
+    }
+    
+    childrenStore.setChildrenList([mockChild])
     
     // 设置默认选中的儿童
     if (!childrenStore.currentChild) {
-      childrenStore.setCurrentChild(mockChildren[0])
+      childrenStore.setCurrentChild(mockChild)
     }
   }
 })
