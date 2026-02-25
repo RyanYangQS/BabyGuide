@@ -36,21 +36,15 @@
       <text class="section-title">快速记录</text>
       <view class="action-buttons">
         <view class="action-btn temperature-btn" @click="showTemperatureModal = true">
-          <view class="action-icon">
-            <u-icon name="minus" color="#FF4D4F" size="48"></u-icon>
-          </view>
+          <view class="action-icon">🌡️</view>
           <text class="action-text">体温</text>
         </view>
         <view class="action-btn medicine-btn" @click="showMedicineModal = true">
-          <view class="action-icon">
-            <u-icon name="minus" color="#4A90E2" size="48"></u-icon>
-          </view>
+          <view class="action-icon">💊</view>
           <text class="action-text">用药</text>
         </view>
         <view class="action-btn symptom-btn" @click="showSymptomModal = true">
-          <view class="action-icon">
-            <u-icon name="edit-pen" color="#FAAD14" size="48"></u-icon>
-          </view>
+          <view class="action-icon">📝</view>
           <text class="action-text">症状</text>
         </view>
       </view>
@@ -76,13 +70,14 @@
       </view>
       
       <view class="empty-state" v-else>
-        <u-empty mode="data" text="暂无记录"></u-empty>
+        <text class="empty-icon">📋</text>
+        <text class="empty-text">暂无记录</text>
       </view>
     </view>
 
     <!-- 快速录入按钮（右下角+） -->
     <view class="quick-add-btn" @click="showQuickAddModal = true">
-      <u-icon name="plus" color="#FFFFFF" size="40" bold></u-icon>
+      <text class="plus-icon">+</text>
     </view>
 
     <!-- 弹窗组件 -->
@@ -438,6 +433,7 @@ onMounted(() => {
       align-items: center;
       justify-content: center;
       margin-bottom: 16rpx;
+      font-size: 48rpx;
     }
     
     .action-text {
@@ -514,6 +510,23 @@ onMounted(() => {
   }
 }
 
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+  
+  .empty-icon {
+    font-size: 80rpx;
+    margin-bottom: 24rpx;
+  }
+  
+  .empty-text {
+    font-size: 28rpx;
+    color: #999;
+  }
+}
+
 .quick-add-btn {
   position: fixed;
   right: 32rpx;
@@ -527,6 +540,12 @@ onMounted(() => {
   align-items: center;
   justify-content: center;
   z-index: 100;
+  
+  .plus-icon {
+    font-size: 48rpx;
+    color: #FFFFFF;
+    font-weight: bold;
+  }
 }
 
 .theme-healthy {

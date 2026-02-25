@@ -4,11 +4,6 @@ const src_store_modules_children = require("../../src/store/modules/children.js"
 const src_store_modules_health = require("../../src/store/modules/health.js");
 const src_utils_theme = require("../../src/utils/theme.js");
 const src_utils_date = require("../../src/utils/date.js");
-if (!Array) {
-  const _component_u_icon = common_vendor.resolveComponent("u-icon");
-  const _component_u_empty = common_vendor.resolveComponent("u-empty");
-  (_component_u_icon + _component_u_empty)();
-}
 if (!Math) {
   (TemperatureModal + MedicineModal + SymptomModal + QuickAddModal)();
 }
@@ -190,27 +185,12 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         j: common_vendor.t(((_d = latestTemperature.value) == null ? void 0 : _d.temperature) || "--"),
         k: common_vendor.t(todayMedicineCount.value),
         l: common_vendor.t(todaySymptomCount.value),
-        m: common_vendor.p({
-          name: "minus",
-          color: "#FF4D4F",
-          size: "48"
-        }),
-        n: common_vendor.o(($event) => showTemperatureModal.value = true),
-        o: common_vendor.p({
-          name: "minus",
-          color: "#4A90E2",
-          size: "48"
-        }),
-        p: common_vendor.o(($event) => showMedicineModal.value = true),
-        q: common_vendor.p({
-          name: "edit-pen",
-          color: "#FAAD14",
-          size: "48"
-        }),
-        r: common_vendor.o(($event) => showSymptomModal.value = true),
-        s: recentRecords.value.length > 0
+        m: common_vendor.o(($event) => showTemperatureModal.value = true),
+        n: common_vendor.o(($event) => showMedicineModal.value = true),
+        o: common_vendor.o(($event) => showSymptomModal.value = true),
+        p: recentRecords.value.length > 0
       }, recentRecords.value.length > 0 ? {
-        t: common_vendor.f(recentRecords.value, (record, k0, i0) => {
+        q: common_vendor.f(recentRecords.value, (record, k0, i0) => {
           return {
             a: common_vendor.t(record.icon),
             b: common_vendor.t(record.title),
@@ -220,40 +200,29 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
             f: record._id
           };
         })
-      } : {
+      } : {}, {
+        r: common_vendor.o(($event) => showQuickAddModal.value = true),
+        s: common_vendor.o(handleRecordSuccess),
+        t: common_vendor.o(($event) => showTemperatureModal.value = $event),
         v: common_vendor.p({
-          mode: "data",
-          text: "暂无记录"
-        })
-      }, {
-        w: common_vendor.p({
-          name: "plus",
-          color: "#FFFFFF",
-          size: "40",
-          bold: true
-        }),
-        x: common_vendor.o(($event) => showQuickAddModal.value = true),
-        y: common_vendor.o(handleRecordSuccess),
-        z: common_vendor.o(($event) => showTemperatureModal.value = $event),
-        A: common_vendor.p({
           show: showTemperatureModal.value
         }),
-        B: common_vendor.o(handleRecordSuccess),
-        C: common_vendor.o(($event) => showMedicineModal.value = $event),
-        D: common_vendor.p({
+        w: common_vendor.o(handleRecordSuccess),
+        x: common_vendor.o(($event) => showMedicineModal.value = $event),
+        y: common_vendor.p({
           show: showMedicineModal.value
         }),
-        E: common_vendor.o(handleRecordSuccess),
-        F: common_vendor.o(($event) => showSymptomModal.value = $event),
-        G: common_vendor.p({
+        z: common_vendor.o(handleRecordSuccess),
+        A: common_vendor.o(($event) => showSymptomModal.value = $event),
+        B: common_vendor.p({
           show: showSymptomModal.value
         }),
-        H: common_vendor.o(handleRecordSuccess),
-        I: common_vendor.o(($event) => showQuickAddModal.value = $event),
-        J: common_vendor.p({
+        C: common_vendor.o(handleRecordSuccess),
+        D: common_vendor.o(($event) => showQuickAddModal.value = $event),
+        E: common_vendor.p({
           show: showQuickAddModal.value
         }),
-        K: common_vendor.n(themeClass.value)
+        F: common_vendor.n(themeClass.value)
       });
     };
   }
