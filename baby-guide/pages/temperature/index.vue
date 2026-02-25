@@ -1,10 +1,13 @@
 <template>
-  <view class="temperature-page">
-    <!-- 体温概览 -->
-    <view class="temperature-overview card" :class="themeClass">
+  <view class="temperature-page" :class="themeClass">
+    <!-- 当前体温概览 -->
+    <view class="temperature-overview">
       <view class="overview-header">
         <text class="overview-title">当前体温</text>
-        <text class="overview-status" :class="themeClass">{{ healthStatusText }}</text>
+        <view class="overview-status" :class="statusClass">
+          <text class="status-dot"></text>
+          <text class="status-text">{{ healthStatusText }}</text>
+        </view>
       </view>
       <view class="overview-value">
         <text class="value-number">{{ latestTemperature?.temperature || '--' }}</text>
@@ -15,52 +18,80 @@
       </view>
     </view>
 
-    <!-- 体温趋势图 -->
-    <view class="chart-section card" v-if="temperatureRecords.length > 0">
-      <view class="section-header">
-        <text class="section-title">体温趋势</text>
-        <picker mode="date" @change="handleDateChange">
-          <view class="date-picker">
-            <text>{{ selectedDate }}</text>
-            <text class="picker-arrow">▼</text>
+    <!-- 体温趋势 -->
+    <view class="chart-section">
+      <view class="chart-header">
+        <text class="chart-title">体温趋势</text>
+        <view class="time-filter">
+          <view 
+            class="filter-btn" 
+            :class="{ active: timeFilter === 'today' }"
+            @click="timeFilter = 'today'"
+          >
+            <text>今天</text>
           </view>
-        </picker>
-      </view>
-      <view class="chart-container">
-        <view class="chart-placeholder">
-          <text class="placeholder-text">体温趋势图</text>
-          <text class="placeholder-desc">（后续集成图表组件）</text>
+          <view 
+            class="filter-btn" 
+            :class="{ active: timeFilter === 'yesterday' }"
+            @click="timeFilter = 'yesterday'"
+          >
+            <text>昨天</text>
+          </view>
+          <view 
+            class="filter-btn" 
+            :class="{ active: timeFilter === 'week' }"
+            @click="timeFilter = 'week'"
+          >
+            <text>近7天</text>
+          </view>
         </view>
+      </view>
+      <view class="chart-placeholder">
+        <text class="placeholder-icon">📈</text>
+        <text class="placeholder-text">体温趋势图</text>
+        <text class="placeholder-desc">（后续集成图表组件）</text>
       </view>
     </view>
 
-    <!-- 体温记录列表 -->
-    <view class="record-section">
-      <view class="section-header">
-        <text class="section-title">记录列表</text>
-        <text class="record-count">共{{ temperatureRecords.length }}条</text>
+    <!-- 体温统计 -->
+    <view class="stats-section">
+      <view class="stat-card">
+        <text class="stat-label">最高体温</text>
+        <text class="stat-value high">{{ temperatureStats.max }}°C</text>
       </view>
+      <view class="stat-card">
+        <text class="stat-label">最低体温</text>
+        <text class="stat-value low">{{ temperatureStats.min }}°C</text>
+      </view>
+      <view class="stat-card">
+        <text class="stat-label">平均体温</text>
+        <text class="stat-value avg">{{ temperatureStats.avg }}°C</text>
+      </view>
+    </view>
+
+    <!-- 记录列表 -->
+    <view class="record-section">
+      <text class="section-title">记录列表</text>
       
       <view class="record-list" v-if="temperatureRecords.length > 0">
         <view 
-          class="record-item card" 
+          class="record-item" 
+          :class="getRecordClass(record.temperature)"
           v-for="record in temperatureRecords" 
           :key="record._id"
-          :class="getThemeClass(record.temperature)"
         >
-          <view class="record-left">
-            <view class="record-temperature">
-              <text class="temp-value">{{ record.temperature }}</text>
-              <text class="temp-unit">°C</text>
+          <view class="record-header">
+            <view class="record-left">
+              <text class="record-temp">{{ record.temperature }}°C</text>
+              <text class="record-status" :class="getStatusClass(record.temperature)">
+                {{ getStatusText(record.temperature) }}
+              </text>
             </view>
-            <view class="record-status" :class="getThemeClass(record.temperature)">
-              {{ getTemperatureStatus(record.temperature) }}
-            </view>
+            <text class="record-time">{{ formatDate(record.measureTime, 'MM-DD HH:mm') }}</text>
           </view>
-          <view class="record-right">
-            <view class="record-time">{{ formatDate(record.measureTime, 'MM-DD HH:mm') }}</view>
-            <view class="record-part">{{ getMeasurePartText(record.measurePart) }}</view>
-            <view class="record-notes" v-if="record.notes">{{ record.notes }}</view>
+          <view class="record-detail">
+            <text>{{ getMeasurePartText(record.measurePart) }}</text>
+            <text v-if="record.notes"> · {{ record.notes }}</text>
           </view>
         </view>
       </view>
@@ -75,92 +106,93 @@
     <view class="add-btn" @click="handleAdd">
       <text class="add-icon">+</text>
     </view>
+
+    <!-- 体温录入弹窗 -->
+    <TemperatureModal 
+      v-model:show="showAddModal" 
+      @success="handleRecordSuccess"
+    />
   </view>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useHealthStore } from '../../src/store/modules/health'
-import { HealthStatus, getHealthStatus } from '../../src/utils/theme'
+import { getHealthStatus } from '../../src/utils/theme'
 import { formatDate } from '../../src/utils/date'
+import TemperatureModal from '../../src/components/TemperatureModal.vue'
 
 const healthStore = useHealthStore()
 
-const selectedDate = ref(formatDate(new Date(), 'YYYY-MM-DD'))
+const timeFilter = ref('today')
+const showAddModal = ref(false)
 
-// 体温记录列表
 const temperatureRecords = computed(() => healthStore.temperatureRecords)
-
-// 最新体温
 const latestTemperature = computed(() => healthStore.latestTemperature)
-
-// 当前健康状态
 const currentHealthStatus = computed(() => healthStore.currentHealthStatus)
 
-// 主题类名
 const themeClass = computed(() => `theme-${currentHealthStatus.value}`)
+const statusClass = computed(() => `status-${currentHealthStatus.value}`)
 
-// 健康状态文本
 const healthStatusText = computed(() => {
-  const statusMap = {
-    [HealthStatus.Healthy]: '正常',
-    [HealthStatus.LowFever]: '低烧',
-    [HealthStatus.Fever]: '发烧'
+  const statusMap: Record<string, string> = {
+    'healthy': '体温正常',
+    'low-fever': '低热',
+    'fever': '发热'
   }
-  return statusMap[currentHealthStatus.value]
+  return statusMap[currentHealthStatus.value] || '体温正常'
 })
 
-/**
- * 根据体温获取主题类名
- */
-function getThemeClass(temperature: number): string {
-  const status = getHealthStatus(temperature)
-  return `theme-${status}`
-}
-
-/**
- * 根据体温获取状态文本
- */
-function getTemperatureStatus(temperature: number): string {
-  const status = getHealthStatus(temperature)
-  const statusMap = {
-    [HealthStatus.Healthy]: '正常',
-    [HealthStatus.LowFever]: '低烧',
-    [HealthStatus.Fever]: '发烧'
+const temperatureStats = computed(() => {
+  const records = temperatureRecords.value
+  if (records.length === 0) {
+    return { max: '--', min: '--', avg: '--' }
   }
-  return statusMap[status]
+  
+  const temps = records.map(r => r.temperature)
+  const max = Math.max(...temps)
+  const min = Math.min(...temps)
+  const avg = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1)
+  
+  return { max, min, avg }
+})
+
+function getRecordClass(temp: number): string {
+  const status = getHealthStatus(temp)
+  return `record-${status}`
 }
 
-/**
- * 获取测量部位文本
- */
+function getStatusClass(temp: number): string {
+  const status = getHealthStatus(temp)
+  return `status-${status}`
+}
+
+function getStatusText(temp: number): string {
+  const status = getHealthStatus(temp)
+  const statusMap: Record<string, string> = {
+    'healthy': '正常',
+    'low-fever': '低热',
+    'fever': '高热'
+  }
+  return statusMap[status] || '正常'
+}
+
 function getMeasurePartText(part: string): string {
   const partMap: Record<string, string> = {
-    oral: '口腔',
-    axillary: '腋下',
-    rectal: '直肠',
-    ear: '耳温'
+    oral: '口腔测量',
+    axillary: '腋下测量',
+    rectal: '直肠测量',
+    ear: '耳温测量'
   }
   return partMap[part] || part
 }
 
-/**
- * 日期选择变化
- */
-function handleDateChange(e: any) {
-  selectedDate.value = e.detail.value
-  // TODO: 根据日期筛选记录
+function handleAdd() {
+  showAddModal.value = true
 }
 
-/**
- * 添加体温记录
- */
-function handleAdd() {
-  // TODO: 跳转到添加页面或显示弹窗
-  uni.showToast({
-    title: '添加体温记录',
-    icon: 'none'
-  })
+function handleRecordSuccess() {
+  // 数据已通过 store 更新
 }
 
 onMounted(() => {
@@ -170,7 +202,7 @@ onMounted(() => {
       {
         _id: '1',
         childId: '1',
-        temperature: 36.5,
+        temperature: 38.5,
         measureTime: new Date().toISOString(),
         measurePart: 'axillary' as const,
         createTime: new Date().toISOString()
@@ -178,7 +210,7 @@ onMounted(() => {
       {
         _id: '2',
         childId: '1',
-        temperature: 37.2,
+        temperature: 37.8,
         measureTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
         measurePart: 'axillary' as const,
         createTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
@@ -186,9 +218,9 @@ onMounted(() => {
       {
         _id: '3',
         childId: '1',
-        temperature: 38.1,
+        temperature: 39.2,
         measureTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-        measurePart: 'axillary' as const,
+        measurePart: 'ear' as const,
         createTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
       }
     ]
@@ -198,274 +230,302 @@ onMounted(() => {
 </script>
 
 <style lang="scss" scoped>
-@import '../../src/styles/variables.scss';
-
 .temperature-page {
   min-height: 100vh;
-  padding: $spacing-md;
-  padding-bottom: 200rpx;
+  background: #f5f7fa;
+  padding-bottom: 180rpx;
 }
 
 // 体温概览
 .temperature-overview {
-  margin-bottom: $spacing-lg;
-  
-  &.theme-healthy {
-    background: linear-gradient(135deg, $healthy-light 0%, #FFFFFF 100%);
-    border: 2rpx solid $healthy-border;
-    
-    .overview-status {
-      color: $healthy-primary;
-    }
-  }
-  
-  &.theme-low-fever {
-    background: linear-gradient(135deg, $low-fever-light 0%, #FFFFFF 100%);
-    border: 2rpx solid $low-fever-border;
-    
-    .overview-status {
-      color: $low-fever-primary;
-    }
-  }
-  
-  &.theme-fever {
-    background: linear-gradient(135deg, $fever-light 0%, #FFFFFF 100%);
-    border: 2rpx solid $fever-border;
-    
-    .overview-status {
-      color: $fever-primary;
-    }
-  }
+  background: linear-gradient(135deg, var(--theme-primary, #4A90E2) 0%, var(--theme-secondary, #5BA3F5) 100%);
+  padding: 48rpx 32rpx;
+  margin: 24rpx;
+  border-radius: 24rpx;
+  color: #fff;
   
   .overview-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: $spacing-md;
+    margin-bottom: 24rpx;
   }
   
   .overview-title {
-    font-size: $font-md;
-    color: $text-secondary;
+    font-size: 32rpx;
+    font-weight: 700;
   }
   
   .overview-status {
-    font-size: $font-sm;
-    padding: 4rpx 16rpx;
-    border-radius: $radius-full;
+    display: flex;
+    align-items: center;
+    gap: 8rpx;
+    padding: 8rpx 20rpx;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 24rpx;
     
-    &.theme-healthy {
-      background-color: $healthy-light;
+    .status-dot {
+      width: 16rpx;
+      height: 16rpx;
+      border-radius: 50%;
+      background: #fff;
     }
     
-    &.theme-low-fever {
-      background-color: $low-fever-light;
-    }
-    
-    &.theme-fever {
-      background-color: $fever-light;
+    .status-text {
+      font-size: 24rpx;
+      font-weight: 600;
     }
   }
   
   .overview-value {
     display: flex;
     align-items: baseline;
-    margin-bottom: $spacing-sm;
+    margin-bottom: 16rpx;
     
     .value-number {
-      font-size: 80rpx;
-      font-weight: bold;
-      color: $text-color;
+      font-size: 96rpx;
+      font-weight: 800;
     }
     
     .value-unit {
-      font-size: $font-lg;
-      color: $text-secondary;
+      font-size: 40rpx;
       margin-left: 8rpx;
     }
   }
   
   .overview-time {
-    font-size: $font-sm;
-    color: $text-light;
+    font-size: 24rpx;
+    opacity: 0.9;
   }
+}
+
+// 主题变量
+.theme-healthy {
+  --theme-primary: #52C41A;
+  --theme-secondary: #9BE34D;
+}
+
+.theme-low-fever {
+  --theme-primary: #FAAD14;
+  --theme-secondary: #FFB84D;
+}
+
+.theme-fever {
+  --theme-primary: #FF4D4F;
+  --theme-secondary: #FF4D6A;
 }
 
 // 图表区域
 .chart-section {
-  margin-bottom: $spacing-lg;
+  background: #fff;
+  margin: 24rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
   
-  .section-header {
+  .chart-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: $spacing-md;
+    margin-bottom: 32rpx;
   }
   
-  .section-title {
-    font-size: $font-lg;
-    font-weight: bold;
-    color: $text-color;
+  .chart-title {
+    font-size: 32rpx;
+    font-weight: 700;
+    color: #333;
   }
   
-  .date-picker {
+  .time-filter {
     display: flex;
-    align-items: center;
-    font-size: $font-sm;
-    color: $primary-color;
+    gap: 16rpx;
     
-    .picker-arrow {
-      font-size: $font-xs;
-      margin-left: 8rpx;
+    .filter-btn {
+      padding: 12rpx 24rpx;
+      background: #f5f5f5;
+      border-radius: 20rpx;
+      font-size: 24rpx;
+      color: #666;
+      
+      &.active {
+        background: rgba(74, 144, 226, 0.1);
+        color: #4A90E2;
+      }
     }
-  }
-  
-  .chart-container {
-    height: 300rpx;
-    background-color: $background-color;
-    border-radius: $radius-md;
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
   
   .chart-placeholder {
-    text-align: center;
+    height: 300rpx;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: #f5f5f5;
+    border-radius: 16rpx;
+    
+    .placeholder-icon {
+      font-size: 64rpx;
+      margin-bottom: 16rpx;
+    }
     
     .placeholder-text {
-      font-size: $font-md;
-      color: $text-light;
+      font-size: 28rpx;
+      color: #666;
     }
     
     .placeholder-desc {
-      font-size: $font-sm;
-      color: $text-light;
-      display: block;
+      font-size: 24rpx;
+      color: #999;
       margin-top: 8rpx;
+    }
+  }
+}
+
+// 统计区域
+.stats-section {
+  display: flex;
+  gap: 16rpx;
+  margin: 0 24rpx 24rpx;
+  
+  .stat-card {
+    flex: 1;
+    background: #fff;
+    border-radius: 20rpx;
+    padding: 24rpx;
+    text-align: center;
+    
+    .stat-label {
+      font-size: 24rpx;
+      color: #999;
+      display: block;
+      margin-bottom: 8rpx;
+    }
+    
+    .stat-value {
+      font-size: 40rpx;
+      font-weight: 800;
+      
+      &.high { color: #FF4D4F; }
+      &.low { color: #52C41A; }
+      &.avg { color: #FAAD14; }
     }
   }
 }
 
 // 记录列表
 .record-section {
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-md;
-  }
+  margin: 0 24rpx;
   
   .section-title {
-    font-size: $font-lg;
-    font-weight: bold;
-    color: $text-color;
-  }
-  
-  .record-count {
-    font-size: $font-sm;
-    color: $text-light;
+    font-size: 32rpx;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 24rpx;
+    display: block;
   }
   
   .record-list {
     .record-item {
+      background: #fff;
+      border-radius: 20rpx;
+      padding: 24rpx;
+      margin-bottom: 16rpx;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 8rpx;
+      }
+      
+      &.record-healthy::before { background: #52C41A; }
+      &.record-low-fever::before { background: #FAAD14; }
+      &.record-fever::before { background: #FF4D4F; }
+    }
+    
+    .record-header {
       display: flex;
-      margin-bottom: $spacing-md;
-      
-      &.theme-healthy {
-        border-left: 6rpx solid $healthy-primary;
-        
-        .record-status {
-          color: $healthy-primary;
-          background-color: $healthy-light;
-        }
-      }
-      
-      &.theme-low-fever {
-        border-left: 6rpx solid $low-fever-primary;
-        
-        .record-status {
-          color: $low-fever-primary;
-          background-color: $low-fever-light;
-        }
-      }
-      
-      &.theme-fever {
-        border-left: 6rpx solid $fever-primary;
-        
-        .record-status {
-          color: $fever-primary;
-          background-color: $fever-light;
-        }
-      }
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12rpx;
     }
     
     .record-left {
-      width: 160rpx;
-      text-align: center;
-      padding-right: $spacing-md;
-      border-right: 1rpx solid $border-color;
+      display: flex;
+      align-items: center;
+      gap: 16rpx;
     }
     
-    .record-temperature {
-      display: flex;
-      align-items: baseline;
-      justify-content: center;
-      margin-bottom: 8rpx;
-      
-      .temp-value {
-        font-size: 48rpx;
-        font-weight: bold;
-        color: $text-color;
-      }
-      
-      .temp-unit {
-        font-size: $font-sm;
-        color: $text-secondary;
-        margin-left: 4rpx;
-      }
+    .record-temp {
+      font-size: 40rpx;
+      font-weight: 800;
+      color: #333;
     }
     
     .record-status {
-      display: inline-block;
-      font-size: $font-xs;
-      padding: 4rpx 12rpx;
-      border-radius: $radius-sm;
-    }
-    
-    .record-right {
-      flex: 1;
-      padding-left: $spacing-md;
+      padding: 4rpx 16rpx;
+      border-radius: 12rpx;
+      font-size: 22rpx;
+      
+      &.status-healthy {
+        background: rgba(82, 196, 26, 0.1);
+        color: #52C41A;
+      }
+      
+      &.status-low-fever {
+        background: rgba(250, 173, 20, 0.1);
+        color: #FAAD14;
+      }
+      
+      &.status-fever {
+        background: rgba(255, 77, 79, 0.1);
+        color: #FF4D4F;
+      }
     }
     
     .record-time {
-      font-size: $font-md;
-      color: $text-color;
-      margin-bottom: 4rpx;
+      font-size: 24rpx;
+      color: #999;
     }
     
-    .record-part {
-      font-size: $font-sm;
-      color: $text-secondary;
-      margin-bottom: 4rpx;
+    .record-detail {
+      font-size: 26rpx;
+      color: #666;
     }
-    
-    .record-notes {
-      font-size: $font-sm;
-      color: $text-light;
-    }
+  }
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+  
+  .empty-icon {
+    font-size: 80rpx;
+    margin-bottom: 24rpx;
+  }
+  
+  .empty-text {
+    font-size: 28rpx;
+    color: #999;
   }
 }
 
 // 添加按钮
 .add-btn {
   position: fixed;
-  right: 40rpx;
-  bottom: 200rpx;
-  width: 100rpx;
-  height: 100rpx;
+  right: 32rpx;
+  bottom: 180rpx;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, $primary-color 0%, #5BA3F5 100%);
-  box-shadow: $shadow-lg;
+  background: linear-gradient(135deg, #FF4D4F 0%, #FF6B6B 100%);
+  box-shadow: 0 8rpx 24rpx rgba(255, 77, 79, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;

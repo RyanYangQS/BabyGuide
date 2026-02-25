@@ -1,66 +1,48 @@
 <template>
   <view class="medicine-page">
-    <!-- 今日用药概览 -->
-    <view class="medicine-overview card">
-      <view class="overview-header">
-        <text class="overview-title">今日用药</text>
-        <text class="overview-count">{{ todayMedicineCount }}次</text>
-      </view>
-      <view class="overview-tips" v-if="nextMedicineTime">
-        <text class="tips-icon">⏰</text>
-        <text class="tips-text">下次用药时间：{{ nextMedicineTime }}</text>
-      </view>
-    </view>
-
     <!-- 用药提醒 -->
-    <view class="reminder-section card" v-if="medicineReminders.length > 0">
-      <view class="section-title">
-        <text class="title-text">用药提醒</text>
-        <text class="title-badge">{{ medicineReminders.length }}</text>
-      </view>
-      <view class="reminder-list">
-        <view 
-          class="reminder-item" 
-          v-for="reminder in medicineReminders" 
-          :key="reminder.id"
-        >
-          <view class="reminder-info">
-            <text class="reminder-name">{{ reminder.name }}</text>
-            <text class="reminder-time">{{ reminder.time }}</text>
-          </view>
-          <view class="reminder-action">
-            <button class="btn-take" @click="handleTakeMedicine(reminder)">服用</button>
-          </view>
+    <view class="medicine-alert">
+      <view class="alert-header">
+        <text class="alert-icon">⏰</text>
+        <view class="alert-info">
+          <text class="alert-title">下次可用时间</text>
+          <text class="alert-time">{{ nextAvailableTime }}</text>
         </view>
       </view>
+      <view class="alert-countdown" v-if="countdown">
+        <text class="countdown-text">{{ countdown }}</text>
+      </view>
+      <view class="alert-stats">
+        <text class="stats-label">📊 今日用药统计</text>
+        <text class="stats-value" v-for="stat in todayStats" :key="stat.name">
+          {{ stat.name }}: {{ stat.current }}/{{ stat.max }}次
+        </text>
+      </view>
     </view>
 
-    <!-- 用药记录列表 -->
-    <view class="record-section">
-      <view class="section-header">
-        <text class="section-title">用药记录</text>
-        <text class="record-count">共{{ medicineRecords.length }}条</text>
-      </view>
+    <!-- 用药记录 -->
+    <view class="medicine-section">
+      <text class="section-title">用药记录</text>
       
-      <view class="record-list" v-if="medicineRecords.length > 0">
+      <view class="medicine-list" v-if="medicineRecords.length > 0">
         <view 
-          class="record-item card" 
+          class="medicine-item" 
           v-for="record in medicineRecords" 
           :key="record._id"
         >
-          <view class="record-header">
-            <text class="record-name">{{ record.medicineName }}</text>
-            <text class="record-time">{{ formatDate(record.takeTime, 'MM-DD HH:mm') }}</text>
+          <view class="medicine-header">
+            <view class="medicine-info">
+              <text class="medicine-name">{{ record.medicineName }}</text>
+              <text class="medicine-dosage">{{ record.dosage }}{{ record.unit }}</text>
+            </view>
+            <text class="medicine-time">{{ formatDate(record.takeTime, 'MM-DD HH:mm') }}</text>
           </view>
-          <view class="record-detail">
-            <view class="detail-item">
-              <text class="detail-label">剂量：</text>
-              <text class="detail-value">{{ record.dosage }}{{ record.unit }}</text>
-            </view>
-            <view class="detail-item" v-if="record.notes">
-              <text class="detail-label">备注：</text>
-              <text class="detail-value">{{ record.notes }}</text>
-            </view>
+          <view class="medicine-next" v-if="record.nextTakeTime">
+            <text class="next-icon">⏱</text>
+            <text class="next-text">下次可用: {{ formatDate(record.nextTakeTime, 'HH:mm') }}</text>
+          </view>
+          <view class="medicine-notes" v-if="record.notes">
+            <text>{{ record.notes }}</text>
           </view>
         </view>
       </view>
@@ -72,9 +54,15 @@
     </view>
 
     <!-- 添加按钮 -->
-    <view class="add-btn" @click="handleAdd">
+    <view class="add-btn" @click="showAddModal = true">
       <text class="add-icon">+</text>
     </view>
+
+    <!-- 用药录入弹窗 -->
+    <MedicineModal 
+      v-model:show="showAddModal" 
+      @success="handleRecordSuccess"
+    />
   </view>
 </template>
 
@@ -82,52 +70,40 @@
 import { ref, computed, onMounted } from 'vue'
 import { useHealthStore } from '../../src/store/modules/health'
 import { formatDate } from '../../src/utils/date'
+import MedicineModal from '../../src/components/MedicineModal.vue'
 
 const healthStore = useHealthStore()
 
-// 用药记录列表
+const showAddModal = ref(false)
+const nextAvailableTime = ref('--:--')
+const countdown = ref('')
+
 const medicineRecords = computed(() => healthStore.medicineRecords)
 
-// 今日用药次数
-const todayMedicineCount = computed(() => healthStore.todayMedicineRecords.length)
+const todayStats = computed(() => {
+  // 模拟今日用药统计
+  return [
+    { name: '美林', current: 2, max: 4 },
+    { name: '泰诺林', current: 1, max: 4 }
+  ]
+})
 
-// 下次用药时间（模拟）
-const nextMedicineTime = ref('')
-
-// 用药提醒列表（模拟）
-const medicineReminders = ref([
-  { id: '1', name: '美林', time: '14:00' },
-  { id: '2', name: '小儿氨酚黄那敏颗粒', time: '18:00' }
-])
-
-/**
- * 服用药物
- */
-function handleTakeMedicine(reminder: any) {
-  uni.showModal({
-    title: '确认服用',
-    content: `确认已服用 ${reminder.name}？`,
-    success: (res) => {
-      if (res.confirm) {
-        // TODO: 记录用药
-        uni.showToast({
-          title: '已记录',
-          icon: 'success'
-        })
-      }
-    }
-  })
+function handleRecordSuccess() {
+  // 数据已通过 store 更新
+  updateNextAvailableTime()
 }
 
-/**
- * 添加用药记录
- */
-function handleAdd() {
-  // TODO: 跳转到添加页面或显示弹窗
-  uni.showToast({
-    title: '添加用药记录',
-    icon: 'none'
-  })
+function updateNextAvailableTime() {
+  // 模拟计算下次可用时间
+  const now = new Date()
+  const next = new Date(now.getTime() + 4 * 60 * 60 * 1000)
+  nextAvailableTime.value = formatDate(next, 'HH:mm')
+  
+  // 计算倒计时
+  const diff = next.getTime() - now.getTime()
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+  countdown.value = `(还剩${hours}小时${minutes}分钟)`
 }
 
 onMounted(() => {
@@ -141,16 +117,17 @@ onMounted(() => {
         medicineName: '美林',
         dosage: '5',
         unit: 'ml',
-        takeTime: new Date().toISOString(),
-        createTime: new Date().toISOString()
+        takeTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+        nextTakeTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+        createTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
       },
       {
         _id: '2',
         childId: '1',
-        medicineId: '3',
-        medicineName: '小儿氨酚黄那敏颗粒',
-        dosage: '1',
-        unit: '袋',
+        medicineId: '2',
+        medicineName: '泰诺林',
+        dosage: '3',
+        unit: 'ml',
         takeTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
         createTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
       }
@@ -158,199 +135,195 @@ onMounted(() => {
     healthStore.setMedicineRecords(mockRecords)
   }
   
-  // 设置下次用药时间
-  nextMedicineTime.value = '14:00'
+  updateNextAvailableTime()
 })
 </script>
 
 <style lang="scss" scoped>
-@import '../../src/styles/variables.scss';
-
 .medicine-page {
   min-height: 100vh;
-  padding: $spacing-md;
-  padding-bottom: 200rpx;
-}
-
-// 用药概览
-.medicine-overview {
-  margin-bottom: $spacing-lg;
-  
-  .overview-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-sm;
-  }
-  
-  .overview-title {
-    font-size: $font-lg;
-    font-weight: bold;
-    color: $text-color;
-  }
-  
-  .overview-count {
-    font-size: $font-xl;
-    font-weight: bold;
-    color: $primary-color;
-  }
-  
-  .overview-tips {
-    display: flex;
-    align-items: center;
-    padding: $spacing-sm;
-    background-color: rgba($warning-color, 0.1);
-    border-radius: $radius-md;
-    
-    .tips-icon {
-      font-size: $font-lg;
-      margin-right: $spacing-sm;
-    }
-    
-    .tips-text {
-      font-size: $font-sm;
-      color: $warning-color;
-    }
-  }
+  background: #f5f7fa;
+  padding-bottom: 180rpx;
 }
 
 // 用药提醒
-.reminder-section {
-  margin-bottom: $spacing-lg;
+.medicine-alert {
+  background: linear-gradient(135deg, #4A90E2 0%, #5BA3F5 100%);
+  margin: 24rpx;
+  border-radius: 24rpx;
+  padding: 32rpx;
+  color: #fff;
   
-  .section-title {
+  .alert-header {
     display: flex;
     align-items: center;
-    margin-bottom: $spacing-md;
+    gap: 20rpx;
+    margin-bottom: 16rpx;
+  }
+  
+  .alert-icon {
+    font-size: 48rpx;
+  }
+  
+  .alert-info {
+    flex: 1;
+  }
+  
+  .alert-title {
+    font-size: 28rpx;
+    opacity: 0.9;
+    display: block;
+    margin-bottom: 8rpx;
+  }
+  
+  .alert-time {
+    font-size: 48rpx;
+    font-weight: 800;
+  }
+  
+  .alert-countdown {
+    margin-bottom: 20rpx;
     
-    .title-text {
-      font-size: $font-md;
-      font-weight: bold;
-      color: $text-color;
-    }
-    
-    .title-badge {
-      margin-left: $spacing-sm;
-      padding: 2rpx 12rpx;
-      background-color: $error-color;
-      color: #FFFFFF;
-      font-size: $font-xs;
-      border-radius: $radius-full;
+    .countdown-text {
+      font-size: 26rpx;
+      opacity: 0.9;
     }
   }
   
-  .reminder-list {
-    .reminder-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: $spacing-sm 0;
-      border-bottom: 1rpx solid $border-color;
-      
-      &:last-child {
-        border-bottom: none;
-      }
+  .alert-stats {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 16rpx;
+    padding: 20rpx;
+    
+    .stats-label {
+      font-size: 26rpx;
+      display: block;
+      margin-bottom: 12rpx;
     }
     
-    .reminder-info {
-      flex: 1;
-      
-      .reminder-name {
-        font-size: $font-md;
-        color: $text-color;
-        display: block;
-        margin-bottom: 4rpx;
-      }
-      
-      .reminder-time {
-        font-size: $font-sm;
-        color: $text-light;
-      }
-    }
-    
-    .btn-take {
-      padding: 8rpx 32rpx;
-      background-color: $primary-color;
-      color: #FFFFFF;
-      font-size: $font-sm;
-      border-radius: $radius-full;
-      border: none;
+    .stats-value {
+      font-size: 28rpx;
+      display: block;
+      margin-top: 8rpx;
     }
   }
 }
 
-// 记录列表
-.record-section {
-  .section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: $spacing-md;
-  }
+// 用药记录
+.medicine-section {
+  margin: 24rpx;
   
   .section-title {
-    font-size: $font-lg;
-    font-weight: bold;
-    color: $text-color;
+    font-size: 32rpx;
+    font-weight: 700;
+    color: #333;
+    margin-bottom: 24rpx;
+    display: block;
   }
   
-  .record-count {
-    font-size: $font-sm;
-    color: $text-light;
-  }
-  
-  .record-list {
-    .record-item {
-      margin-bottom: $spacing-md;
+  .medicine-list {
+    .medicine-item {
+      background: #fff;
+      border-radius: 20rpx;
+      padding: 24rpx;
+      margin-bottom: 16rpx;
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 8rpx;
+        background: #4A90E2;
+      }
     }
     
-    .record-header {
+    .medicine-header {
       display: flex;
       justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12rpx;
+    }
+    
+    .medicine-info {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    .medicine-name {
+      font-size: 32rpx;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 4rpx;
+    }
+    
+    .medicine-dosage {
+      font-size: 26rpx;
+      color: #666;
+    }
+    
+    .medicine-time {
+      font-size: 24rpx;
+      color: #999;
+    }
+    
+    .medicine-next {
+      display: flex;
       align-items: center;
-      margin-bottom: $spacing-sm;
+      gap: 8rpx;
+      padding: 12rpx 16rpx;
+      background: rgba(74, 144, 226, 0.1);
+      border-radius: 12rpx;
+      margin-bottom: 12rpx;
       
-      .record-name {
-        font-size: $font-lg;
-        font-weight: bold;
-        color: $text-color;
+      .next-icon {
+        font-size: 24rpx;
       }
       
-      .record-time {
-        font-size: $font-sm;
-        color: $text-light;
+      .next-text {
+        font-size: 24rpx;
+        color: #4A90E2;
       }
     }
     
-    .record-detail {
-      .detail-item {
-        display: flex;
-        margin-bottom: 4rpx;
-        
-        .detail-label {
-          font-size: $font-sm;
-          color: $text-secondary;
-        }
-        
-        .detail-value {
-          font-size: $font-sm;
-          color: $text-color;
-        }
-      }
+    .medicine-notes {
+      font-size: 24rpx;
+      color: #999;
     }
+  }
+}
+
+// 空状态
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80rpx 0;
+  
+  .empty-icon {
+    font-size: 80rpx;
+    margin-bottom: 24rpx;
+  }
+  
+  .empty-text {
+    font-size: 28rpx;
+    color: #999;
   }
 }
 
 // 添加按钮
 .add-btn {
   position: fixed;
-  right: 40rpx;
-  bottom: 200rpx;
-  width: 100rpx;
-  height: 100rpx;
+  right: 32rpx;
+  bottom: 180rpx;
+  width: 112rpx;
+  height: 112rpx;
   border-radius: 50%;
-  background: linear-gradient(135deg, $primary-color 0%, #5BA3F5 100%);
-  box-shadow: $shadow-lg;
+  background: linear-gradient(135deg, #4A90E2 0%, #5BA3F5 100%);
+  box-shadow: 0 8rpx 24rpx rgba(74, 144, 226, 0.4);
   display: flex;
   align-items: center;
   justify-content: center;

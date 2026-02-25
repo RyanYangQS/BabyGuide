@@ -3,53 +3,70 @@ const common_vendor = require("../../common/vendor.js");
 const src_store_modules_health = require("../../src/store/modules/health.js");
 const src_utils_theme = require("../../src/utils/theme.js");
 const src_utils_date = require("../../src/utils/date.js");
+if (!Math) {
+  TemperatureModal();
+}
+const TemperatureModal = () => "../../src/components/TemperatureModal.js";
 const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "index",
   setup(__props) {
     const healthStore = src_store_modules_health.useHealthStore();
-    const selectedDate = common_vendor.ref(src_utils_date.formatDate(/* @__PURE__ */ new Date(), "YYYY-MM-DD"));
+    const timeFilter = common_vendor.ref("today");
+    const showAddModal = common_vendor.ref(false);
     const temperatureRecords = common_vendor.computed(() => healthStore.temperatureRecords);
     const latestTemperature = common_vendor.computed(() => healthStore.latestTemperature);
     const currentHealthStatus = common_vendor.computed(() => healthStore.currentHealthStatus);
     const themeClass = common_vendor.computed(() => `theme-${currentHealthStatus.value}`);
+    const statusClass = common_vendor.computed(() => `status-${currentHealthStatus.value}`);
     const healthStatusText = common_vendor.computed(() => {
       const statusMap = {
-        [src_utils_theme.HealthStatus.Healthy]: "正常",
-        [src_utils_theme.HealthStatus.LowFever]: "低烧",
-        [src_utils_theme.HealthStatus.Fever]: "发烧"
+        "healthy": "体温正常",
+        "low-fever": "低热",
+        "fever": "发热"
       };
-      return statusMap[currentHealthStatus.value];
+      return statusMap[currentHealthStatus.value] || "体温正常";
     });
-    function getThemeClass(temperature) {
-      const status = src_utils_theme.getHealthStatus(temperature);
-      return `theme-${status}`;
+    const temperatureStats = common_vendor.computed(() => {
+      const records = temperatureRecords.value;
+      if (records.length === 0) {
+        return { max: "--", min: "--", avg: "--" };
+      }
+      const temps = records.map((r) => r.temperature);
+      const max = Math.max(...temps);
+      const min = Math.min(...temps);
+      const avg = (temps.reduce((a, b) => a + b, 0) / temps.length).toFixed(1);
+      return { max, min, avg };
+    });
+    function getRecordClass(temp) {
+      const status = src_utils_theme.getHealthStatus(temp);
+      return `record-${status}`;
     }
-    function getTemperatureStatus(temperature) {
-      const status = src_utils_theme.getHealthStatus(temperature);
+    function getStatusClass(temp) {
+      const status = src_utils_theme.getHealthStatus(temp);
+      return `status-${status}`;
+    }
+    function getStatusText(temp) {
+      const status = src_utils_theme.getHealthStatus(temp);
       const statusMap = {
-        [src_utils_theme.HealthStatus.Healthy]: "正常",
-        [src_utils_theme.HealthStatus.LowFever]: "低烧",
-        [src_utils_theme.HealthStatus.Fever]: "发烧"
+        "healthy": "正常",
+        "low-fever": "低热",
+        "fever": "高热"
       };
-      return statusMap[status];
+      return statusMap[status] || "正常";
     }
     function getMeasurePartText(part) {
       const partMap = {
-        oral: "口腔",
-        axillary: "腋下",
-        rectal: "直肠",
-        ear: "耳温"
+        oral: "口腔测量",
+        axillary: "腋下测量",
+        rectal: "直肠测量",
+        ear: "耳温测量"
       };
       return partMap[part] || part;
     }
-    function handleDateChange(e) {
-      selectedDate.value = e.detail.value;
-    }
     function handleAdd() {
-      common_vendor.index.showToast({
-        title: "添加体温记录",
-        icon: "none"
-      });
+      showAddModal.value = true;
+    }
+    function handleRecordSuccess() {
     }
     common_vendor.onMounted(() => {
       if (temperatureRecords.value.length === 0) {
@@ -57,7 +74,7 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           {
             _id: "1",
             childId: "1",
-            temperature: 36.5,
+            temperature: 38.5,
             measureTime: (/* @__PURE__ */ new Date()).toISOString(),
             measurePart: "axillary",
             createTime: (/* @__PURE__ */ new Date()).toISOString()
@@ -65,7 +82,7 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           {
             _id: "2",
             childId: "1",
-            temperature: 37.2,
+            temperature: 37.8,
             measureTime: new Date(Date.now() - 4 * 60 * 60 * 1e3).toISOString(),
             measurePart: "axillary",
             createTime: new Date(Date.now() - 4 * 60 * 60 * 1e3).toISOString()
@@ -73,9 +90,9 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           {
             _id: "3",
             childId: "1",
-            temperature: 38.1,
+            temperature: 39.2,
             measureTime: new Date(Date.now() - 8 * 60 * 60 * 1e3).toISOString(),
-            measurePart: "axillary",
+            measurePart: "ear",
             createTime: new Date(Date.now() - 8 * 60 * 60 * 1e3).toISOString()
           }
         ];
@@ -86,38 +103,46 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       var _a;
       return common_vendor.e({
         a: common_vendor.t(healthStatusText.value),
-        b: common_vendor.n(themeClass.value),
+        b: common_vendor.n(statusClass.value),
         c: common_vendor.t(((_a = latestTemperature.value) == null ? void 0 : _a.temperature) || "--"),
         d: latestTemperature.value
       }, latestTemperature.value ? {
         e: common_vendor.t(common_vendor.unref(src_utils_date.formatDate)(latestTemperature.value.measureTime, "YYYY-MM-DD HH:mm"))
       } : {}, {
-        f: common_vendor.n(themeClass.value),
-        g: temperatureRecords.value.length > 0
+        f: timeFilter.value === "today" ? 1 : "",
+        g: common_vendor.o(($event) => timeFilter.value = "today"),
+        h: timeFilter.value === "yesterday" ? 1 : "",
+        i: common_vendor.o(($event) => timeFilter.value = "yesterday"),
+        j: timeFilter.value === "week" ? 1 : "",
+        k: common_vendor.o(($event) => timeFilter.value = "week"),
+        l: common_vendor.t(temperatureStats.value.max),
+        m: common_vendor.t(temperatureStats.value.min),
+        n: common_vendor.t(temperatureStats.value.avg),
+        o: temperatureRecords.value.length > 0
       }, temperatureRecords.value.length > 0 ? {
-        h: common_vendor.t(selectedDate.value),
-        i: common_vendor.o(handleDateChange)
-      } : {}, {
-        j: common_vendor.t(temperatureRecords.value.length),
-        k: temperatureRecords.value.length > 0
-      }, temperatureRecords.value.length > 0 ? {
-        l: common_vendor.f(temperatureRecords.value, (record, k0, i0) => {
+        p: common_vendor.f(temperatureRecords.value, (record, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(record.temperature),
-            b: common_vendor.t(getTemperatureStatus(record.temperature)),
-            c: common_vendor.n(getThemeClass(record.temperature)),
+            b: common_vendor.t(getStatusText(record.temperature)),
+            c: common_vendor.n(getStatusClass(record.temperature)),
             d: common_vendor.t(common_vendor.unref(src_utils_date.formatDate)(record.measureTime, "MM-DD HH:mm")),
             e: common_vendor.t(getMeasurePartText(record.measurePart)),
             f: record.notes
           }, record.notes ? {
             g: common_vendor.t(record.notes)
           } : {}, {
-            h: record._id,
-            i: common_vendor.n(getThemeClass(record.temperature))
+            h: common_vendor.n(getRecordClass(record.temperature)),
+            i: record._id
           });
         })
       } : {}, {
-        m: common_vendor.o(handleAdd)
+        q: common_vendor.o(handleAdd),
+        r: common_vendor.o(handleRecordSuccess),
+        s: common_vendor.o(($event) => showAddModal.value = $event),
+        t: common_vendor.p({
+          show: showAddModal.value
+        }),
+        v: common_vendor.n(themeClass.value)
       });
     };
   }
