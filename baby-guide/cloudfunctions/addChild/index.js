@@ -13,7 +13,13 @@ const familyMembersCollection = db.collection('family_members')
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const openid = wxContext.OPENID
+  let openid = wxContext.OPENID
+
+  // 模拟器调试模式：如果没有 openid，使用测试 openid
+  if (!openid) {
+    console.log('模拟器模式：使用测试 openid')
+    openid = 'test_user_openid'
+  }
 
   const { name, gender, birthday, bloodType, allergies, notes, avatar } = event
 

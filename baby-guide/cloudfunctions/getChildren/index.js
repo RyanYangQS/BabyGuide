@@ -8,16 +8,21 @@ cloud.init({
 })
 
 const db = cloud.database()
-const childrenCollection = db.collection('children')
-const familyMembersCollection = db.collection('family_members')
+const _ = db.command
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const openid = wxContext.OPENID
+  let openid = wxContext.OPENID
+
+  // 模拟器调试模式：如果没有 openid，使用测试 openid
+  if (!openid) {
+    console.log('模拟器模式：使用测试 openid')
+    openid = 'test_user_openid'
+  }
 
   try {
     // 获取用户关联的儿童ID
-    const familyResult = await familyMembersCollection.where({
+    const familyResult = await db.collection('family_members').where({
       _openid: openid
     }).get()
 
@@ -30,8 +35,8 @@ exports.main = async (event, context) => {
 
     // 获取儿童详情
     const childIds = familyResult.data.map(item => item.childId)
-    const childrenResult = await childrenCollection.where({
-      _id: db.command.in(childIds)
+    const childrenResult = await db.collection('children').where({
+      _id: _.in(childIds)
     }).get()
 
     return {
