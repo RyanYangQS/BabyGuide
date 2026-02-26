@@ -9,64 +9,78 @@ cloud.init({
 })
 
 const db = cloud.database()
-const usersCollection = db.collection('users')
+const _ = db.command
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  let openid = wxContext.OPENID
+  const openid = wxContext.OPENID
+  const appid = wxContext.APPID
+  const unionid = wxContext.UNIONID
 
-  // 模拟器调试模式：如果没有 openid，使用测试 openid
+  console.log('登录信息:', { openid, appid, unionid })
+
+  // 真机环境必须有 openid
   if (!openid) {
-    console.log('模拟器模式：使用测试 openid')
-    openid = 'test_openid_' + Date.now()
+    return {
+      success: false,
+      errMsg: '获取用户信息失败，请确保在微信环境中打开'
+    }
   }
 
   try {
+    const usersCollection = db.collection('users')
+    
     // 查询用户是否存在
     const userResult = await usersCollection.where({
       _openid: openid
     }).get()
+
+    const now = db.serverDate()
 
     if (userResult.data.length > 0) {
       // 用户已存在，更新登录时间
       const user = userResult.data[0]
       await usersCollection.doc(user._id).update({
         data: {
-          lastLoginTime: db.serverDate(),
-          updateTime: db.serverDate()
+          lastLoginTime: now,
+          updateTime: now,
+          loginCount: _.inc(1)
         }
       })
+      
+      console.log('用户登录成功:', user._id)
       
       return {
         success: true,
         data: {
-          user: user,
-          isNewUser: false,
-          isSimulator: !wxContext.OPENID
+          userId: user._id,
+          openid: openid,
+          isNewUser: false
         }
       }
     } else {
       // 新用户，创建记录
-      const newUser = {
+      const newUserData = {
         _openid: openid,
-        createTime: db.serverDate(),
-        updateTime: db.serverDate(),
-        lastLoginTime: db.serverDate()
+        _unionid: unionid || '',
+        createTime: now,
+        updateTime: now,
+        lastLoginTime: now,
+        loginCount: 1
       }
       
       const result = await usersCollection.add({
-        data: newUser
+        data: newUserData
       })
+      
+      console.log('新用户创建成功:', result._id)
       
       return {
         success: true,
         data: {
-          user: {
-            _id: result._id,
-            ...newUser
-          },
-          isNewUser: true,
-          isSimulator: !wxContext.OPENID
+          userId: result._id,
+          openid: openid,
+          isNewUser: true
         }
       }
     }
@@ -74,7 +88,7 @@ exports.main = async (event, context) => {
     console.error('登录失败:', err)
     return {
       success: false,
-      errMsg: err.message || '登录失败'
+      errMsg: err.message || '登录失败，请重试'
     }
   }
 }

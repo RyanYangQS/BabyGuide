@@ -1,14 +1,19 @@
 <script setup lang="ts">
 import { onHide, onLaunch, onShow } from '@dcloudio/uni-app'
-import { userLogin } from './src/api'
 import { useChildrenStore } from './src/store/modules/children'
+import { useUserStore } from './src/store/modules/user'
 
 onLaunch(async () => {
   console.log('App Launch')
   
   // 初始化云开发
   if (!uni.cloud) {
-    console.error('当前环境不支持云开发，请使用真机预览')
+    console.error('当前环境不支持云开发')
+    uni.showModal({
+      title: '提示',
+      content: '当前环境不支持云开发，请使用微信真机预览',
+      showCancel: false
+    })
     return
   }
   
@@ -24,19 +29,17 @@ onLaunch(async () => {
   }
   
   // 自动登录
-  try {
-    const res = await userLogin()
-    if (res.success) {
-      console.log('用户登录成功', res.data?.isNewUser ? '(新用户)' : '(老用户)')
-      
-      // 加载儿童列表
-      const childrenStore = useChildrenStore()
-      await childrenStore.fetchChildren()
-    } else {
-      console.error('登录失败:', res.errMsg)
-    }
-  } catch (err) {
-    console.error('登录异常:', err)
+  const userStore = useUserStore()
+  const childrenStore = useChildrenStore()
+  
+  // 检查是否已登录
+  if (!userStore.checkLoginStatus()) {
+    await userStore.login()
+  }
+  
+  // 加载儿童列表
+  if (userStore.isLoggedIn) {
+    await childrenStore.fetchChildren()
   }
 })
 

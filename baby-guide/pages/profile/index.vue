@@ -2,13 +2,22 @@
   <view class="profile-page">
     <!-- 用户信息 -->
     <view class="user-card">
-      <view class="user-info" @click="handleLogin">
+      <view class="user-info" @click="handleUserClick">
         <view class="user-avatar">
-          <text>{{ userInfo.name?.charAt(0) || '用' }}</text>
+          <open-data v-if="isLoggedIn" type="userAvatarUrl"></open-data>
+          <text v-else>微</text>
         </view>
         <view class="user-detail">
-          <text class="user-name">{{ userInfo.name || '点击登录' }}</text>
-          <text class="user-phone">{{ userInfo.phone || '登录后查看更多信息' }}</text>
+          <text class="user-name">
+            <open-data v-if="isLoggedIn" type="userNickName"></open-data>
+            <text v-else>点击登录</text>
+          </text>
+          <text class="user-phone">
+            {{ isLoggedIn ? '已关联微信账号' : '登录后查看更多信息' }}
+          </text>
+        </view>
+        <view class="user-arrow" v-if="!isLoggedIn">
+          <text>›</text>
         </view>
       </view>
     </view>
@@ -94,33 +103,48 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted } from 'vue'
 import { useChildrenStore } from '../../src/store/modules/children'
+import { useUserStore } from '../../src/store/modules/user'
 import { formatAge } from '../../src/utils/date'
 import type { Child } from '../../src/types'
 
 const childrenStore = useChildrenStore()
+const userStore = useUserStore()
 
-// 用户信息（模拟）
-const userInfo = ref({
-  name: '',
-  phone: ''
-})
+// 登录状态
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
-// 儿童列表 - 使用 store 中的数据
+// 儿童列表
 const childrenList = computed(() => childrenStore.childrenList)
 
 /**
- * 登录
+ * 点击用户信息
  */
-function handleLogin() {
-  uni.showToast({ title: '登录功能开发中', icon: 'none' })
+async function handleUserClick() {
+  if (!isLoggedIn.value) {
+    uni.showLoading({ title: '登录中...', mask: true })
+    const res = await userStore.login()
+    uni.hideLoading()
+    
+    if (res.success) {
+      uni.showToast({ title: '登录成功', icon: 'success' })
+      // 加载儿童列表
+      await childrenStore.fetchChildren()
+    } else {
+      uni.showToast({ title: res.errMsg || '登录失败', icon: 'none' })
+    }
+  }
 }
 
 /**
  * 添加儿童
  */
 function handleAddChild() {
+  if (!isLoggedIn.value) {
+    uni.showToast({ title: '请先登录', icon: 'none' })
+    return
+  }
   uni.navigateTo({
     url: '/pages/profile/addChild'
   })
@@ -151,25 +175,10 @@ function handleMenuClick(type: string) {
   uni.showToast({ title: `${menuMap[type]}开发中`, icon: 'none' })
 }
 
-onMounted(() => {
-  // 加载模拟数据 - 只初始化一个默认儿童
-  if (childrenStore.childrenList.length === 0) {
-    const mockChild: Child = {
-      _id: '1',
-      name: '小明',
-      avatar: '',
-      gender: 'male',
-      birthday: '2022-06-15',
-      createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString()
-    }
-    
-    childrenStore.setChildrenList([mockChild])
-    
-    // 设置默认选中的儿童
-    if (!childrenStore.currentChild) {
-      childrenStore.setCurrentChild(mockChild)
-    }
+onMounted(async () => {
+  // 如果已登录，加载儿童列表
+  if (isLoggedIn.value) {
+    await childrenStore.fetchChildren()
   }
 })
 </script>
@@ -202,6 +211,7 @@ onMounted(() => {
     color: #4A90E2;
     font-weight: bold;
     margin-right: 32rpx;
+    overflow: hidden;
   }
   
   .user-detail {
@@ -219,6 +229,13 @@ onMounted(() => {
   .user-phone {
     font-size: 26rpx;
     color: rgba(255, 255, 255, 0.85);
+  }
+  
+  .user-arrow {
+    text {
+      font-size: 40rpx;
+      color: rgba(255, 255, 255, 0.8);
+    }
   }
 }
 

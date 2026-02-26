@@ -7,3 +7,4 @@ export default pinia
 // 导出所有 store
 export * from './modules/children'
 export * from './modules/health'
+export * from './modules/user'
