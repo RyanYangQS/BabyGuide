@@ -1,6 +1,8 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const src_store_modules_health = require("../../src/store/modules/health.js");
+const src_store_modules_children = require("../../src/store/modules/children.js");
+const src_store_modules_user = require("../../src/store/modules/user.js");
 const src_utils_date = require("../../src/utils/date.js");
 if (!Math) {
   MedicineModal();
@@ -10,65 +12,75 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "index",
   setup(__props) {
     const healthStore = src_store_modules_health.useHealthStore();
+    const childrenStore = src_store_modules_children.useChildrenStore();
+    const userStore = src_store_modules_user.useUserStore();
     const showAddModal = common_vendor.ref(false);
     const nextAvailableTime = common_vendor.ref("--:--");
     const countdown = common_vendor.ref("");
+    const isLoggedIn = common_vendor.computed(() => userStore.isLoggedIn);
+    const currentChild = common_vendor.computed(() => childrenStore.currentChild);
     const medicineRecords = common_vendor.computed(() => healthStore.medicineRecords);
     const todayStats = common_vendor.computed(() => {
-      return [
-        { name: "美林", current: 2, max: 4 },
-        { name: "泰诺林", current: 1, max: 4 }
-      ];
+      const todayRecords = healthStore.todayMedicineRecords;
+      const stats = {};
+      todayRecords.forEach((record) => {
+        if (!stats[record.medicineName]) {
+          stats[record.medicineName] = { current: 0, max: 4 };
+        }
+        stats[record.medicineName].current++;
+      });
+      return Object.entries(stats).map(([name, data]) => ({
+        name,
+        ...data
+      }));
     });
     function handleRecordSuccess() {
+      var _a;
+      if ((_a = currentChild.value) == null ? void 0 : _a._id) {
+        healthStore.fetchMedicineRecords(currentChild.value._id);
+      }
       updateNextAvailableTime();
     }
     function updateNextAvailableTime() {
-      const now = /* @__PURE__ */ new Date();
-      const next = new Date(now.getTime() + 4 * 60 * 60 * 1e3);
-      nextAvailableTime.value = src_utils_date.formatDate(next, "HH:mm");
-      const diff = next.getTime() - now.getTime();
-      const hours = Math.floor(diff / (1e3 * 60 * 60));
-      const minutes = Math.floor(diff % (1e3 * 60 * 60) / (1e3 * 60));
-      countdown.value = `(还剩${hours}小时${minutes}分钟)`;
-    }
-    common_vendor.onMounted(() => {
-      if (medicineRecords.value.length === 0) {
-        const mockRecords = [
-          {
-            _id: "1",
-            childId: "1",
-            medicineId: "1",
-            medicineName: "美林",
-            dosage: "5",
-            unit: "ml",
-            takeTime: new Date(Date.now() - 2 * 60 * 60 * 1e3).toISOString(),
-            nextTakeTime: new Date(Date.now() + 2 * 60 * 60 * 1e3).toISOString(),
-            createTime: new Date(Date.now() - 2 * 60 * 60 * 1e3).toISOString()
-          },
-          {
-            _id: "2",
-            childId: "1",
-            medicineId: "2",
-            medicineName: "泰诺林",
-            dosage: "3",
-            unit: "ml",
-            takeTime: new Date(Date.now() - 6 * 60 * 60 * 1e3).toISOString(),
-            createTime: new Date(Date.now() - 6 * 60 * 60 * 1e3).toISOString()
-          }
-        ];
-        healthStore.setMedicineRecords(mockRecords);
+      const records = medicineRecords.value;
+      if (records.length > 0) {
+        const latest = records[0];
+        const takeTime = new Date(latest.takeTime);
+        const nextTime = new Date(takeTime.getTime() + 4 * 60 * 60 * 1e3);
+        nextAvailableTime.value = src_utils_date.formatDate(nextTime, "HH:mm");
+        const now = /* @__PURE__ */ new Date();
+        if (nextTime > now) {
+          const diff = nextTime.getTime() - now.getTime();
+          const hours = Math.floor(diff / (1e3 * 60 * 60));
+          const minutes = Math.floor(diff % (1e3 * 60 * 60) / (1e3 * 60));
+          countdown.value = `(还剩${hours}小时${minutes}分钟)`;
+        } else {
+          countdown.value = "";
+          nextAvailableTime.value = "现在可用";
+        }
       }
+    }
+    common_vendor.watch(currentChild, (child) => {
+      if (child && child._id) {
+        healthStore.fetchMedicineRecords(child._id);
+      }
+    }, { immediate: true });
+    common_vendor.watch(medicineRecords, () => {
       updateNextAvailableTime();
+    }, { deep: true });
+    common_vendor.onMounted(() => {
+      userStore.checkLoginStatus();
     });
     return (_ctx, _cache) => {
       return common_vendor.e({
-        a: common_vendor.t(nextAvailableTime.value),
-        b: countdown.value
+        a: !isLoggedIn.value
+      }, !isLoggedIn.value ? {} : !currentChild.value ? {} : common_vendor.e({
+        c: common_vendor.t(nextAvailableTime.value),
+        d: countdown.value
       }, countdown.value ? {
-        c: common_vendor.t(countdown.value)
+        e: common_vendor.t(countdown.value)
       } : {}, {
-        d: common_vendor.f(todayStats.value, (stat, k0, i0) => {
+        f: common_vendor.f(todayStats.value, (stat, k0, i0) => {
           return {
             a: common_vendor.t(stat.name),
             b: common_vendor.t(stat.current),
@@ -76,9 +88,9 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
             d: stat.name
           };
         }),
-        e: medicineRecords.value.length > 0
+        g: medicineRecords.value.length > 0
       }, medicineRecords.value.length > 0 ? {
-        f: common_vendor.f(medicineRecords.value, (record, k0, i0) => {
+        h: common_vendor.f(medicineRecords.value, (record, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(record.medicineName),
             b: common_vendor.t(record.dosage),
@@ -96,12 +108,14 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           });
         })
       } : {}, {
-        g: common_vendor.o(($event) => showAddModal.value = true),
-        h: common_vendor.o(handleRecordSuccess),
-        i: common_vendor.o(($event) => showAddModal.value = $event),
-        j: common_vendor.p({
+        i: common_vendor.o(($event) => showAddModal.value = true),
+        j: common_vendor.o(handleRecordSuccess),
+        k: common_vendor.o(($event) => showAddModal.value = $event),
+        l: common_vendor.p({
           show: showAddModal.value
         })
+      }), {
+        b: !currentChild.value
       });
     };
   }

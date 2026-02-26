@@ -9,11 +9,6 @@ onLaunch(async () => {
   // 初始化云开发
   if (!uni.cloud) {
     console.error('当前环境不支持云开发')
-    uni.showModal({
-      title: '提示',
-      content: '当前环境不支持云开发，请使用微信真机预览',
-      showCancel: false
-    })
     return
   }
   
@@ -28,17 +23,13 @@ onLaunch(async () => {
     return
   }
   
-  // 自动登录
+  // 检查是否之前已登录（从缓存读取）
   const userStore = useUserStore()
-  const childrenStore = useChildrenStore()
+  const wasLoggedIn = userStore.checkLoginStatus()
   
-  // 检查是否已登录
-  if (!userStore.checkLoginStatus()) {
-    await userStore.login()
-  }
-  
-  // 加载儿童列表
-  if (userStore.isLoggedIn) {
+  // 如果之前已登录，自动加载儿童列表
+  if (wasLoggedIn) {
+    const childrenStore = useChildrenStore()
     await childrenStore.fetchChildren()
   }
 })

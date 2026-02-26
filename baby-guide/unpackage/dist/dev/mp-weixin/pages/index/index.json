@@ -3,10 +3,10 @@
   "navigationBarBackgroundColor": "#FFFFFF",
   "navigationBarTextStyle": "black",
   "usingComponents": {
-    "temperature-modal": "../../src/components/TemperatureModal",
+    "child-switch-modal": "../../src/components/ChildSwitchModal",
     "medicine-modal": "../../src/components/MedicineModal",
-    "symptom-modal": "../../src/components/SymptomModal",
     "quick-add-modal": "../../src/components/QuickAddModal",
-    "child-switch-modal": "../../src/components/ChildSwitchModal"
+    "symptom-modal": "../../src/components/SymptomModal",
+    "temperature-modal": "../../src/components/TemperatureModal"
   }
 }

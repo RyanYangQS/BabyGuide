@@ -11,7 +11,13 @@ const db = cloud.database()
 
 exports.main = async (event, context) => {
   const wxContext = cloud.getWXContext()
-  const openid = wxContext.OPENID
+  let openid = wxContext.OPENID
+
+  // 模拟器调试模式
+  if (!openid) {
+    console.log('模拟器模式：使用测试 openid')
+    openid = 'test_user_openid'
+  }
 
   const { childId, temperature, measureTime, measurePart, notes } = event
 

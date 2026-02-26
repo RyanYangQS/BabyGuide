@@ -1,134 +1,162 @@
 <template>
   <view class="temperature-page" :class="themeClass">
-    <!-- 当前体温概览 -->
-    <view class="temperature-overview">
-      <view class="overview-header">
-        <text class="overview-title">当前体温</text>
-        <view class="overview-status" :class="statusClass">
-          <text class="status-dot"></text>
-          <text class="status-text">{{ healthStatusText }}</text>
-        </view>
-      </view>
-      <view class="overview-value">
-        <text class="value-number">{{ latestTemperature?.temperature || '--' }}</text>
-        <text class="value-unit">°C</text>
-      </view>
-      <view class="overview-time" v-if="latestTemperature">
-        测量时间：{{ formatDate(latestTemperature.measureTime, 'YYYY-MM-DD HH:mm') }}
+    <!-- 未登录提示 -->
+    <view class="login-prompt" v-if="!isLoggedIn">
+      <view class="prompt-card">
+        <text class="prompt-icon">🔐</text>
+        <text class="prompt-title">请先登录</text>
+        <text class="prompt-text">登录后查看体温记录</text>
       </view>
     </view>
 
-    <!-- 体温趋势 -->
-    <view class="chart-section">
-      <view class="chart-header">
-        <text class="chart-title">体温趋势</text>
-        <view class="time-filter">
-          <view 
-            class="filter-btn" 
-            :class="{ active: timeFilter === 'today' }"
-            @click="timeFilter = 'today'"
-          >
-            <text>今天</text>
-          </view>
-          <view 
-            class="filter-btn" 
-            :class="{ active: timeFilter === 'yesterday' }"
-            @click="timeFilter = 'yesterday'"
-          >
-            <text>昨天</text>
-          </view>
-          <view 
-            class="filter-btn" 
-            :class="{ active: timeFilter === 'week' }"
-            @click="timeFilter = 'week'"
-          >
-            <text>近7天</text>
+    <!-- 无儿童档案 -->
+    <view class="no-child" v-else-if="!currentChild">
+      <view class="no-child-card">
+        <text class="no-child-icon">👶</text>
+        <text class="no-child-title">还没有儿童档案</text>
+        <text class="no-child-text">添加儿童档案开始记录</text>
+      </view>
+    </view>
+
+    <!-- 正常内容 -->
+    <template v-else>
+      <!-- 当前体温概览 -->
+      <view class="temperature-overview">
+        <view class="overview-header">
+          <text class="overview-title">当前体温</text>
+          <view class="overview-status" :class="statusClass">
+            <text class="status-dot"></text>
+            <text class="status-text">{{ healthStatusText }}</text>
           </view>
         </view>
+        <view class="overview-value">
+          <text class="value-number">{{ latestTemperature?.temperature || '--' }}</text>
+          <text class="value-unit">°C</text>
+        </view>
+        <view class="overview-time" v-if="latestTemperature">
+          测量时间：{{ formatDate(latestTemperature.measureTime, 'YYYY-MM-DD HH:mm') }}
+        </view>
       </view>
-      <view class="chart-wrapper" v-if="!showAddModal">
-        <TemperatureChart 
-          :data="chartData" 
-          :height="300"
-        />
-      </view>
-    </view>
 
-    <!-- 体温统计 -->
-    <view class="stats-section">
-      <view class="stat-card">
-        <text class="stat-label">最高体温</text>
-        <text class="stat-value high">{{ temperatureStats.max }}°C</text>
-      </view>
-      <view class="stat-card">
-        <text class="stat-label">最低体温</text>
-        <text class="stat-value low">{{ temperatureStats.min }}°C</text>
-      </view>
-      <view class="stat-card">
-        <text class="stat-label">平均体温</text>
-        <text class="stat-value avg">{{ temperatureStats.avg }}°C</text>
-      </view>
-    </view>
-
-    <!-- 记录列表 -->
-    <view class="record-section">
-      <text class="section-title">记录列表</text>
-      
-      <view class="record-list" v-if="temperatureRecords.length > 0">
-        <view 
-          class="record-item" 
-          :class="getRecordClass(record.temperature)"
-          v-for="record in temperatureRecords" 
-          :key="record._id"
-        >
-          <view class="record-header">
-            <view class="record-left">
-              <text class="record-temp">{{ record.temperature }}°C</text>
-              <text class="record-status" :class="getStatusClass(record.temperature)">
-                {{ getStatusText(record.temperature) }}
-              </text>
+      <!-- 体温趋势 -->
+      <view class="chart-section" v-if="temperatureRecords.length > 0">
+        <view class="chart-header">
+          <text class="chart-title">体温趋势</text>
+          <view class="time-filter">
+            <view 
+              class="filter-btn" 
+              :class="{ active: timeFilter === 'today' }"
+              @click="timeFilter = 'today'"
+            >
+              <text>今天</text>
             </view>
-            <text class="record-time">{{ formatDate(record.measureTime, 'MM-DD HH:mm') }}</text>
-          </view>
-          <view class="record-detail">
-            <text>{{ getMeasurePartText(record.measurePart) }}</text>
-            <text v-if="record.notes"> · {{ record.notes }}</text>
+            <view 
+              class="filter-btn" 
+              :class="{ active: timeFilter === 'yesterday' }"
+              @click="timeFilter = 'yesterday'"
+            >
+              <text>昨天</text>
+            </view>
+            <view 
+              class="filter-btn" 
+              :class="{ active: timeFilter === 'week' }"
+              @click="timeFilter = 'week'"
+            >
+              <text>近7天</text>
+            </view>
           </view>
         </view>
+        <view class="chart-wrapper">
+          <TemperatureChart 
+            :data="chartData" 
+            :height="300"
+          />
+        </view>
       </view>
-      
-      <view class="empty-state" v-else>
-        <text class="empty-icon">🌡️</text>
-        <text class="empty-text">暂无体温记录</text>
+
+      <!-- 体温统计 -->
+      <view class="stats-section" v-if="temperatureRecords.length > 0">
+        <view class="stat-card">
+          <text class="stat-label">最高体温</text>
+          <text class="stat-value high">{{ temperatureStats.max }}°C</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-label">最低体温</text>
+          <text class="stat-value low">{{ temperatureStats.min }}°C</text>
+        </view>
+        <view class="stat-card">
+          <text class="stat-label">平均体温</text>
+          <text class="stat-value avg">{{ temperatureStats.avg }}°C</text>
+        </view>
       </view>
-    </view>
 
-    <!-- 添加按钮 -->
-    <view class="add-btn" @click="showAddModal = true">
-      <text class="add-icon">+</text>
-    </view>
+      <!-- 记录列表 -->
+      <view class="record-section">
+        <text class="section-title">记录列表</text>
+        
+        <view class="record-list" v-if="temperatureRecords.length > 0">
+          <view 
+            class="record-item" 
+            :class="getRecordClass(record.temperature)"
+            v-for="record in temperatureRecords" 
+            :key="record._id"
+          >
+            <view class="record-header">
+              <view class="record-left">
+                <text class="record-temp">{{ record.temperature }}°C</text>
+                <text class="record-status" :class="getStatusClass(record.temperature)">
+                  {{ getStatusText(record.temperature) }}
+                </text>
+              </view>
+              <text class="record-time">{{ formatDate(record.measureTime, 'MM-DD HH:mm') }}</text>
+            </view>
+            <view class="record-detail">
+              <text>{{ getMeasurePartText(record.measurePart) }}</text>
+              <text v-if="record.notes"> · {{ record.notes }}</text>
+            </view>
+          </view>
+        </view>
+        
+        <view class="empty-state" v-else>
+          <text class="empty-icon">🌡️</text>
+          <text class="empty-text">暂无体温记录</text>
+        </view>
+      </view>
 
-    <!-- 体温录入弹窗 -->
-    <TemperatureModal 
-      v-model:show="showAddModal" 
-      @success="handleRecordSuccess"
-    />
+      <!-- 添加按钮 -->
+      <view class="add-btn" @click="showAddModal = true">
+        <text class="add-icon">+</text>
+      </view>
+
+      <!-- 体温录入弹窗 -->
+      <TemperatureModal 
+        v-model:show="showAddModal" 
+        @success="handleRecordSuccess"
+      />
+    </template>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useHealthStore } from '../../src/store/modules/health'
+import { useChildrenStore } from '../../src/store/modules/children'
+import { useUserStore } from '../../src/store/modules/user'
 import { getHealthStatus } from '../../src/utils/theme'
 import { formatDate } from '../../src/utils/date'
 import TemperatureModal from '../../src/components/TemperatureModal.vue'
 import TemperatureChart from '../../src/components/TemperatureChart.vue'
 
 const healthStore = useHealthStore()
+const childrenStore = useChildrenStore()
+const userStore = useUserStore()
 
 const timeFilter = ref('today')
 const showAddModal = ref(false)
 
+// 登录状态
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const currentChild = computed(() => childrenStore.currentChild)
 const temperatureRecords = computed(() => healthStore.temperatureRecords)
 const latestTemperature = computed(() => healthStore.latestTemperature)
 const currentHealthStatus = computed(() => healthStore.currentHealthStatus)
@@ -201,40 +229,21 @@ function getMeasurePartText(part: string): string {
 }
 
 function handleRecordSuccess() {
-  // 数据已通过 store 更新
+  // 重新加载数据
+  if (currentChild.value?._id) {
+    healthStore.fetchTemperatureRecords(currentChild.value._id)
+  }
 }
 
-onMounted(() => {
-  // 加载模拟数据
-  if (temperatureRecords.value.length === 0) {
-    const mockRecords = [
-      {
-        _id: '1',
-        childId: '1',
-        temperature: 38.5,
-        measureTime: new Date().toISOString(),
-        measurePart: 'axillary' as const,
-        createTime: new Date().toISOString()
-      },
-      {
-        _id: '2',
-        childId: '1',
-        temperature: 37.8,
-        measureTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-        measurePart: 'axillary' as const,
-        createTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        _id: '3',
-        childId: '1',
-        temperature: 39.2,
-        measureTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-        measurePart: 'ear' as const,
-        createTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-    healthStore.setTemperatureRecords(mockRecords)
+// 监听当前儿童变化，加载数据
+watch(currentChild, (child) => {
+  if (child && child._id) {
+    healthStore.fetchTemperatureRecords(child._id)
   }
+}, { immediate: true })
+
+onMounted(() => {
+  userStore.checkLoginStatus()
 })
 </script>
 
@@ -243,6 +252,70 @@ onMounted(() => {
   min-height: 100vh;
   background: #f5f7fa;
   padding-bottom: 180rpx;
+}
+
+// 未登录提示
+.login-prompt {
+  padding: 100rpx 32rpx;
+  
+  .prompt-card {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 80rpx 40rpx;
+    text-align: center;
+  }
+  
+  .prompt-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 32rpx;
+  }
+  
+  .prompt-title {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 16rpx;
+  }
+  
+  .prompt-text {
+    font-size: 28rpx;
+    color: #999;
+    display: block;
+  }
+}
+
+// 无儿童档案
+.no-child {
+  padding: 100rpx 32rpx;
+  
+  .no-child-card {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 80rpx 40rpx;
+    text-align: center;
+  }
+  
+  .no-child-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 32rpx;
+  }
+  
+  .no-child-title {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 16rpx;
+  }
+  
+  .no-child-text {
+    font-size: 28rpx;
+    color: #999;
+    display: block;
+  }
 }
 
 // 体温概览

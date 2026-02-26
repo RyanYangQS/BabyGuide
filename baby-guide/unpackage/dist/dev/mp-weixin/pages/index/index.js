@@ -2,21 +2,24 @@
 const common_vendor = require("../../common/vendor.js");
 const src_store_modules_children = require("../../src/store/modules/children.js");
 const src_store_modules_health = require("../../src/store/modules/health.js");
-const src_utils_theme = require("../../src/utils/theme.js");
+const src_store_modules_user = require("../../src/store/modules/user.js");
 const src_utils_date = require("../../src/utils/date.js");
+const src_utils_theme = require("../../src/utils/theme.js");
 if (!Math) {
   (TemperatureModal + MedicineModal + SymptomModal + QuickAddModal + ChildSwitchModal)();
 }
-const TemperatureModal = () => "../../src/components/TemperatureModal.js";
-const MedicineModal = () => "../../src/components/MedicineModal.js";
-const SymptomModal = () => "../../src/components/SymptomModal.js";
-const QuickAddModal = () => "../../src/components/QuickAddModal.js";
 const ChildSwitchModal = () => "../../src/components/ChildSwitchModal.js";
+const MedicineModal = () => "../../src/components/MedicineModal.js";
+const QuickAddModal = () => "../../src/components/QuickAddModal.js";
+const SymptomModal = () => "../../src/components/SymptomModal.js";
+const TemperatureModal = () => "../../src/components/TemperatureModal.js";
 const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "index",
   setup(__props) {
     const childrenStore = src_store_modules_children.useChildrenStore();
+    const userStore = src_store_modules_user.useUserStore();
     const healthStore = src_store_modules_health.useHealthStore();
+    const isLoggedIn = common_vendor.computed(() => userStore.isLoggedIn);
     const showTemperatureModal = common_vendor.ref(false);
     const showMedicineModal = common_vendor.ref(false);
     const showSymptomModal = common_vendor.ref(false);
@@ -101,108 +104,73 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       };
       return severityMap[severity] || severity;
     }
-    function handleChildClick() {
-      if (currentChild.value) {
-        common_vendor.index.navigateTo({ url: "/pages/profile/childDetail" });
+    async function handleLogin() {
+      common_vendor.index.showLoading({ title: "登录中...", mask: true });
+      const res = await userStore.login();
+      common_vendor.index.hideLoading();
+      if (res.success) {
+        common_vendor.index.showToast({ title: "登录成功", icon: "success" });
+        await childrenStore.fetchChildren();
       } else {
-        common_vendor.index.navigateTo({ url: "/pages/profile/addChild" });
+        common_vendor.index.showToast({ title: res.errMsg || "登录失败", icon: "none" });
       }
+    }
+    function handleAddChild() {
+      common_vendor.index.navigateTo({ url: "/pages/profile/addChild" });
+    }
+    function handleChildClick() {
+      common_vendor.index.navigateTo({ url: "/pages/profile/childDetail" });
     }
     function handleRecordSuccess() {
     }
     function handleChildChange(child) {
-      common_vendor.index.__f__("log", "at pages/index/index.vue:240", "切换儿童:", child.name);
-    }
-    function loadHealthData() {
-      const mockTemperatureRecords = [
-        {
-          _id: "1",
-          childId: "1",
-          temperature: 38.5,
-          measureTime: (/* @__PURE__ */ new Date()).toISOString(),
-          measurePart: "axillary",
-          createTime: (/* @__PURE__ */ new Date()).toISOString()
-        },
-        {
-          _id: "2",
-          childId: "1",
-          temperature: 37.8,
-          measureTime: new Date(Date.now() - 4 * 60 * 60 * 1e3).toISOString(),
-          measurePart: "axillary",
-          createTime: new Date(Date.now() - 4 * 60 * 60 * 1e3).toISOString()
-        },
-        {
-          _id: "3",
-          childId: "1",
-          temperature: 39.2,
-          measureTime: new Date(Date.now() - 8 * 60 * 60 * 1e3).toISOString(),
-          measurePart: "ear",
-          createTime: new Date(Date.now() - 8 * 60 * 60 * 1e3).toISOString()
-        }
-      ];
-      const mockMedicineRecords = [
-        {
-          _id: "1",
-          childId: "1",
-          medicineId: "1",
-          medicineName: "美林",
-          dosage: "5",
-          unit: "ml",
-          takeTime: new Date(Date.now() - 2 * 60 * 60 * 1e3).toISOString(),
-          createTime: new Date(Date.now() - 2 * 60 * 60 * 1e3).toISOString()
-        }
-      ];
-      healthStore.setTemperatureRecords(mockTemperatureRecords);
-      healthStore.setMedicineRecords(mockMedicineRecords);
-    }
-    function initMockData() {
-      if (childrenStore.childrenList.length === 0) {
-        const mockChild = {
-          _id: "1",
-          name: "小明",
-          avatar: "",
-          gender: "male",
-          birthday: "2022-06-15",
-          createTime: (/* @__PURE__ */ new Date()).toISOString(),
-          updateTime: (/* @__PURE__ */ new Date()).toISOString()
-        };
-        childrenStore.setCurrentChild(mockChild);
-        childrenStore.setChildrenList([mockChild]);
+      childrenStore.setCurrentChild(child);
+      if (child._id) {
+        healthStore.fetchTemperatureRecords(child._id);
+        healthStore.fetchMedicineRecords(child._id);
+        healthStore.fetchSymptomRecords(child._id);
       }
-      loadHealthData();
     }
-    common_vendor.onMounted(() => {
-      initMockData();
+    common_vendor.watch(currentChild, (child) => {
+      if (child && child._id) {
+        healthStore.fetchHealthOverview(child._id);
+      }
+    }, { immediate: true });
+    common_vendor.onMounted(async () => {
+      userStore.checkLoginStatus();
+      if (isLoggedIn.value) {
+        await childrenStore.fetchChildren();
+      }
     });
     return (_ctx, _cache) => {
       var _a, _b, _c, _d;
       return common_vendor.e({
-        a: common_vendor.t(((_b = (_a = currentChild.value) == null ? void 0 : _a.name) == null ? void 0 : _b.charAt(0)) || "宝"),
-        b: common_vendor.t(((_c = currentChild.value) == null ? void 0 : _c.name) || "点击添加儿童档案"),
-        c: currentChild.value
-      }, currentChild.value ? {
-        d: common_vendor.t(common_vendor.unref(src_utils_date.formatAge)(currentChild.value.birthday)),
-        e: common_vendor.t(currentChild.value.gender === "male" ? "男" : "女")
-      } : {}, {
-        f: currentChild.value
-      }, currentChild.value ? {
-        g: common_vendor.t(healthStatusEmoji.value),
-        h: common_vendor.t(healthText.value)
-      } : {}, {
-        i: common_vendor.o(handleChildClick),
-        j: childrenList.value.length > 1
+        a: !isLoggedIn.value
+      }, !isLoggedIn.value ? {
+        b: common_vendor.o(handleLogin)
+      } : !currentChild.value ? {
+        d: common_vendor.o(handleAddChild)
+      } : common_vendor.e({
+        e: common_vendor.t(((_b = (_a = currentChild.value) == null ? void 0 : _a.name) == null ? void 0 : _b.charAt(0)) || "宝"),
+        f: common_vendor.t((_c = currentChild.value) == null ? void 0 : _c.name),
+        g: common_vendor.t(common_vendor.unref(src_utils_date.formatAge)(currentChild.value.birthday)),
+        h: common_vendor.t(currentChild.value.gender === "male" ? "男" : "女"),
+        i: common_vendor.t(healthStatusEmoji.value),
+        j: common_vendor.t(healthText.value),
+        k: common_vendor.o(handleChildClick),
+        l: childrenList.value.length > 1
       }, childrenList.value.length > 1 ? {
-        k: common_vendor.o(($event) => showChildSwitch.value = true)
+        m: common_vendor.o(($event) => showChildSwitch.value = true)
       } : {}, {
-        l: common_vendor.t(((_d = latestTemperature.value) == null ? void 0 : _d.temperature) || "--"),
-        m: common_vendor.t(todayMedicineCount.value),
-        n: common_vendor.t(todaySymptomCount.value),
-        o: common_vendor.o(($event) => showTemperatureModal.value = true),
-        p: common_vendor.o(($event) => showMedicineModal.value = true),
-        q: common_vendor.o(($event) => showSymptomModal.value = true),
-        r: recentRecords.value.length > 0
+        n: common_vendor.t(((_d = latestTemperature.value) == null ? void 0 : _d.temperature) || "--"),
+        o: common_vendor.t(todayMedicineCount.value),
+        p: common_vendor.t(todaySymptomCount.value),
+        q: common_vendor.o(($event) => showTemperatureModal.value = true),
+        r: common_vendor.o(($event) => showMedicineModal.value = true),
+        s: common_vendor.o(($event) => showSymptomModal.value = true),
+        t: recentRecords.value.length > 0
       }, recentRecords.value.length > 0 ? {
-        s: common_vendor.f(recentRecords.value, (record, k0, i0) => {
+        v: common_vendor.f(recentRecords.value, (record, k0, i0) => {
           return {
             a: common_vendor.t(record.icon),
             b: common_vendor.t(record.title),
@@ -213,33 +181,35 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           };
         })
       } : {}, {
-        t: common_vendor.o(($event) => showQuickAddModal.value = true),
-        v: common_vendor.o(handleRecordSuccess),
-        w: common_vendor.o(($event) => showTemperatureModal.value = $event),
-        x: common_vendor.p({
+        w: common_vendor.o(($event) => showQuickAddModal.value = true),
+        x: common_vendor.o(handleRecordSuccess),
+        y: common_vendor.o(($event) => showTemperatureModal.value = $event),
+        z: common_vendor.p({
           show: showTemperatureModal.value
         }),
-        y: common_vendor.o(handleRecordSuccess),
-        z: common_vendor.o(($event) => showMedicineModal.value = $event),
-        A: common_vendor.p({
+        A: common_vendor.o(handleRecordSuccess),
+        B: common_vendor.o(($event) => showMedicineModal.value = $event),
+        C: common_vendor.p({
           show: showMedicineModal.value
         }),
-        B: common_vendor.o(handleRecordSuccess),
-        C: common_vendor.o(($event) => showSymptomModal.value = $event),
-        D: common_vendor.p({
+        D: common_vendor.o(handleRecordSuccess),
+        E: common_vendor.o(($event) => showSymptomModal.value = $event),
+        F: common_vendor.p({
           show: showSymptomModal.value
         }),
-        E: common_vendor.o(handleRecordSuccess),
-        F: common_vendor.o(($event) => showQuickAddModal.value = $event),
-        G: common_vendor.p({
+        G: common_vendor.o(handleRecordSuccess),
+        H: common_vendor.o(($event) => showQuickAddModal.value = $event),
+        I: common_vendor.p({
           show: showQuickAddModal.value
         }),
-        H: common_vendor.o(handleChildChange),
-        I: common_vendor.o(($event) => showChildSwitch.value = $event),
-        J: common_vendor.p({
+        J: common_vendor.o(handleChildChange),
+        K: common_vendor.o(($event) => showChildSwitch.value = $event),
+        L: common_vendor.p({
           show: showChildSwitch.value
-        }),
-        K: common_vendor.n(themeClass.value)
+        })
+      }), {
+        c: !currentChild.value,
+        M: common_vendor.n(themeClass.value)
       });
     };
   }

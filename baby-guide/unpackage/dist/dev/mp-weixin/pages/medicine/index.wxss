@@ -28,6 +28,58 @@
   background: #f5f7fa;
   padding-bottom: 180rpx;
 }
+.login-prompt.data-v-837e70fa {
+  padding: 100rpx 32rpx;
+}
+.login-prompt .prompt-card.data-v-837e70fa {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 80rpx 40rpx;
+  text-align: center;
+}
+.login-prompt .prompt-icon.data-v-837e70fa {
+  font-size: 120rpx;
+  display: block;
+  margin-bottom: 32rpx;
+}
+.login-prompt .prompt-title.data-v-837e70fa {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.login-prompt .prompt-text.data-v-837e70fa {
+  font-size: 28rpx;
+  color: #999;
+  display: block;
+}
+.no-child.data-v-837e70fa {
+  padding: 100rpx 32rpx;
+}
+.no-child .no-child-card.data-v-837e70fa {
+  background: #fff;
+  border-radius: 24rpx;
+  padding: 80rpx 40rpx;
+  text-align: center;
+}
+.no-child .no-child-icon.data-v-837e70fa {
+  font-size: 120rpx;
+  display: block;
+  margin-bottom: 32rpx;
+}
+.no-child .no-child-title.data-v-837e70fa {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #333;
+  display: block;
+  margin-bottom: 16rpx;
+}
+.no-child .no-child-text.data-v-837e70fa {
+  font-size: 28rpx;
+  color: #999;
+  display: block;
+}
 .medicine-alert.data-v-837e70fa {
   background: linear-gradient(135deg, #4A90E2 0%, #5BA3F5 100%);
   margin: 24rpx;

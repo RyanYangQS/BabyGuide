@@ -1,130 +1,162 @@
 <template>
   <view class="index-page" :class="themeClass">
-    <!-- 儿童档案卡片 -->
-    <view class="child-card">
-      <view class="child-info" @click="handleChildClick">
-        <view class="child-avatar">{{ currentChild?.name?.charAt(0) || '宝' }}</view>
-        <view class="child-details">
-          <text class="child-name">{{ currentChild?.name || '点击添加儿童档案' }}</text>
-          <text class="child-meta" v-if="currentChild">{{ formatAge(currentChild.birthday) }} · {{ currentChild.gender === 'male' ? '男' : '女' }}</text>
-          <text class="child-status" v-if="currentChild">{{ healthStatusEmoji }} {{ healthText }}</text>
-        </view>
-      </view>
-      <!-- 切换儿童按钮 -->
-      <view class="switch-btn" v-if="childrenList.length > 1" @click="showChildSwitch = true">
-        <text class="switch-icon">⇅</text>
-      </view>
-    </view>
-
-    <!-- 今日概览 -->
-    <view class="overview-section">
-      <text class="section-title">今日概览</text>
-      <view class="overview-cards">
-        <view class="overview-card temperature">
-          <text class="value">{{ latestTemperature?.temperature || '--' }}℃</text>
-          <text class="label">体温</text>
-        </view>
-        <view class="overview-card medicine">
-          <text class="value">{{ todayMedicineCount }}次</text>
-          <text class="label">用药</text>
-        </view>
-        <view class="overview-card symptom">
-          <text class="value">{{ todaySymptomCount }}条</text>
-          <text class="label">症状</text>
+    <!-- 未登录提示 -->
+    <view class="login-prompt" v-if="!isLoggedIn">
+      <view class="prompt-card">
+        <text class="prompt-icon">🔐</text>
+        <text class="prompt-title">欢迎使用养娃不易</text>
+        <text class="prompt-text">请先登录以使用完整功能</text>
+        <view class="prompt-btn" @click="handleLogin">
+          <text>微信登录</text>
         </view>
       </view>
     </view>
 
-    <!-- 快速记录 -->
-    <view class="quick-actions">
-      <text class="section-title">快速记录</text>
-      <view class="action-buttons">
-        <view class="action-btn temperature-btn" @click="showTemperatureModal = true">
-          <view class="action-icon">🌡️</view>
-          <text class="action-text">体温</text>
-        </view>
-        <view class="action-btn medicine-btn" @click="showMedicineModal = true">
-          <view class="action-icon">💊</view>
-          <text class="action-text">用药</text>
-        </view>
-        <view class="action-btn symptom-btn" @click="showSymptomModal = true">
-          <view class="action-icon">📝</view>
-          <text class="action-text">症状</text>
+    <!-- 已登录但无儿童档案 -->
+    <view class="no-child" v-else-if="!currentChild">
+      <view class="no-child-card">
+        <text class="no-child-icon">👶</text>
+        <text class="no-child-title">还没有儿童档案</text>
+        <text class="no-child-text">添加儿童档案开始记录</text>
+        <view class="add-child-btn" @click="handleAddChild">
+          <text>添加儿童</text>
         </view>
       </view>
     </view>
 
-    <!-- 最近记录 -->
-    <view class="recent-records">
-      <text class="section-title">最近记录</text>
-      
-      <view class="record-list" v-if="recentRecords.length > 0">
-        <view 
-          class="record-item" 
-          :class="record.type"
-          v-for="record in recentRecords" 
-          :key="record._id"
-        >
-          <view class="record-header">
-            <text class="record-type">{{ record.icon }} {{ record.title }}</text>
-            <text class="record-time">{{ record.time }}</text>
+    <!-- 正常内容 -->
+    <template v-else>
+      <!-- 儿童档案卡片 -->
+      <view class="child-card">
+        <view class="child-info" @click="handleChildClick">
+          <view class="child-avatar">{{ currentChild?.name?.charAt(0) || '宝' }}</view>
+          <view class="child-details">
+            <text class="child-name">{{ currentChild?.name }}</text>
+            <text class="child-meta">{{ formatAge(currentChild.birthday) }} · {{ currentChild.gender === 'male' ? '男' : '女' }}</text>
+            <text class="child-status">{{ healthStatusEmoji }} {{ healthText }}</text>
           </view>
-          <text class="record-content">{{ record.content }}</text>
+        </view>
+        <!-- 切换儿童按钮 -->
+        <view class="switch-btn" v-if="childrenList.length > 1" @click="showChildSwitch = true">
+          <text class="switch-icon">⇅</text>
         </view>
       </view>
-      
-      <view class="empty-state" v-else>
-        <text class="empty-icon">📋</text>
-        <text class="empty-text">暂无记录</text>
+
+      <!-- 今日概览 -->
+      <view class="overview-section">
+        <text class="section-title">今日概览</text>
+        <view class="overview-cards">
+          <view class="overview-card temperature">
+            <text class="value">{{ latestTemperature?.temperature || '--' }}℃</text>
+            <text class="label">体温</text>
+          </view>
+          <view class="overview-card medicine">
+            <text class="value">{{ todayMedicineCount }}次</text>
+            <text class="label">用药</text>
+          </view>
+          <view class="overview-card symptom">
+            <text class="value">{{ todaySymptomCount }}条</text>
+            <text class="label">症状</text>
+          </view>
+        </view>
       </view>
-    </view>
 
-    <!-- 快速录入按钮（右下角+） -->
-    <view class="quick-add-btn" @click="showQuickAddModal = true">
-      <text class="plus-icon">+</text>
-    </view>
+      <!-- 快速记录 -->
+      <view class="quick-actions">
+        <text class="section-title">快速记录</text>
+        <view class="action-buttons">
+          <view class="action-btn temperature-btn" @click="showTemperatureModal = true">
+            <view class="action-icon">🌡️</view>
+            <text class="action-text">体温</text>
+          </view>
+          <view class="action-btn medicine-btn" @click="showMedicineModal = true">
+            <view class="action-icon">💊</view>
+            <text class="action-text">用药</text>
+          </view>
+          <view class="action-btn symptom-btn" @click="showSymptomModal = true">
+            <view class="action-icon">📝</view>
+            <text class="action-text">症状</text>
+          </view>
+        </view>
+      </view>
 
-    <!-- 弹窗组件 -->
-    <TemperatureModal 
-      v-model:show="showTemperatureModal" 
-      @success="handleRecordSuccess"
-    />
-    <MedicineModal 
-      v-model:show="showMedicineModal" 
-      @success="handleRecordSuccess"
-    />
-    <SymptomModal 
-      v-model:show="showSymptomModal" 
-      @success="handleRecordSuccess"
-    />
-    <QuickAddModal 
-      v-model:show="showQuickAddModal" 
-      @success="handleRecordSuccess"
-    />
-    
-    <!-- 儿童切换弹窗 -->
-    <ChildSwitchModal 
-      v-model:show="showChildSwitch"
-      @change="handleChildChange"
-    />
+      <!-- 最近记录 -->
+      <view class="recent-records">
+        <text class="section-title">最近记录</text>
+        
+        <view class="record-list" v-if="recentRecords.length > 0">
+          <view 
+            class="record-item" 
+            :class="record.type"
+            v-for="record in recentRecords" 
+            :key="record._id"
+          >
+            <view class="record-header">
+              <text class="record-type">{{ record.icon }} {{ record.title }}</text>
+              <text class="record-time">{{ record.time }}</text>
+            </view>
+            <text class="record-content">{{ record.content }}</text>
+          </view>
+        </view>
+        
+        <view class="empty-state" v-else>
+          <text class="empty-icon">📋</text>
+          <text class="empty-text">暂无记录</text>
+        </view>
+      </view>
+
+      <!-- 快速录入按钮（右下角+） -->
+      <view class="quick-add-btn" @click="showQuickAddModal = true">
+        <text class="plus-icon">+</text>
+      </view>
+
+      <!-- 弹窗组件 -->
+      <TemperatureModal 
+        v-model:show="showTemperatureModal" 
+        @success="handleRecordSuccess"
+      />
+      <MedicineModal 
+        v-model:show="showMedicineModal" 
+        @success="handleRecordSuccess"
+      />
+      <SymptomModal 
+        v-model:show="showSymptomModal" 
+        @success="handleRecordSuccess"
+      />
+      <QuickAddModal 
+        v-model:show="showQuickAddModal" 
+        @success="handleRecordSuccess"
+      />
+      
+      <!-- 儿童切换弹窗 -->
+      <ChildSwitchModal 
+        v-model:show="showChildSwitch"
+        @change="handleChildChange"
+      />
+    </template>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
+import ChildSwitchModal from '../../src/components/ChildSwitchModal.vue'
+import MedicineModal from '../../src/components/MedicineModal.vue'
+import QuickAddModal from '../../src/components/QuickAddModal.vue'
+import SymptomModal from '../../src/components/SymptomModal.vue'
+import TemperatureModal from '../../src/components/TemperatureModal.vue'
 import { useChildrenStore } from '../../src/store/modules/children'
 import { useHealthStore } from '../../src/store/modules/health'
-import { getHealthStatus } from '../../src/utils/theme'
-import { formatDate, formatAge } from '../../src/utils/date'
-import TemperatureModal from '../../src/components/TemperatureModal.vue'
-import MedicineModal from '../../src/components/MedicineModal.vue'
-import SymptomModal from '../../src/components/SymptomModal.vue'
-import QuickAddModal from '../../src/components/QuickAddModal.vue'
-import ChildSwitchModal from '../../src/components/ChildSwitchModal.vue'
+import { useUserStore } from '../../src/store/modules/user'
 import type { Child } from '../../src/types'
+import { formatAge, formatDate } from '../../src/utils/date'
+import { getHealthStatus } from '../../src/utils/theme'
 
 const childrenStore = useChildrenStore()
+const userStore = useUserStore()
 const healthStore = useHealthStore()
+
+// 登录状态
+const isLoggedIn = computed(() => userStore.isLoggedIn)
 
 // 弹窗显示状态
 const showTemperatureModal = ref(false)
@@ -223,12 +255,31 @@ function getSeverityText(severity: string): string {
   return severityMap[severity] || severity
 }
 
-function handleChildClick() {
-  if (currentChild.value) {
-    uni.navigateTo({ url: '/pages/profile/childDetail' })
+/**
+ * 登录
+ */
+async function handleLogin() {
+  uni.showLoading({ title: '登录中...', mask: true })
+  const res = await userStore.login()
+  uni.hideLoading()
+  
+  if (res.success) {
+    uni.showToast({ title: '登录成功', icon: 'success' })
+    await childrenStore.fetchChildren()
   } else {
-    uni.navigateTo({ url: '/pages/profile/addChild' })
+    uni.showToast({ title: res.errMsg || '登录失败', icon: 'none' })
   }
+}
+
+/**
+ * 添加儿童
+ */
+function handleAddChild() {
+  uni.navigateTo({ url: '/pages/profile/addChild' })
+}
+
+function handleChildClick() {
+  uni.navigateTo({ url: '/pages/profile/childDetail' })
 }
 
 function handleRecordSuccess() {
@@ -236,77 +287,30 @@ function handleRecordSuccess() {
 }
 
 function handleChildChange(child: Child) {
-  // 切换儿童后重新加载数据
-  console.log('切换儿童:', child.name)
-}
-
-function loadHealthData() {
-  const mockTemperatureRecords = [
-    {
-      _id: '1',
-      childId: '1',
-      temperature: 38.5,
-      measureTime: new Date().toISOString(),
-      measurePart: 'axillary' as const,
-      createTime: new Date().toISOString()
-    },
-    {
-      _id: '2',
-      childId: '1',
-      temperature: 37.8,
-      measureTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      measurePart: 'axillary' as const,
-      createTime: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString()
-    },
-    {
-      _id: '3',
-      childId: '1',
-      temperature: 39.2,
-      measureTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString(),
-      measurePart: 'ear' as const,
-      createTime: new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString()
-    }
-  ]
-  
-  const mockMedicineRecords = [
-    {
-      _id: '1',
-      childId: '1',
-      medicineId: '1',
-      medicineName: '美林',
-      dosage: '5',
-      unit: 'ml',
-      takeTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      createTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-    }
-  ]
-  
-  healthStore.setTemperatureRecords(mockTemperatureRecords)
-  healthStore.setMedicineRecords(mockMedicineRecords)
-}
-
-function initMockData() {
-  // 只初始化一个默认儿童
-  if (childrenStore.childrenList.length === 0) {
-    const mockChild = {
-      _id: '1',
-      name: '小明',
-      avatar: '',
-      gender: 'male' as const,
-      birthday: '2022-06-15',
-      createTime: new Date().toISOString(),
-      updateTime: new Date().toISOString()
-    }
-    
-    childrenStore.setCurrentChild(mockChild)
-    childrenStore.setChildrenList([mockChild])
+  childrenStore.setCurrentChild(child)
+  // 重新加载健康数据
+  if (child._id) {
+    healthStore.fetchTemperatureRecords(child._id)
+    healthStore.fetchMedicineRecords(child._id)
+    healthStore.fetchSymptomRecords(child._id)
   }
-  
-  loadHealthData()
 }
 
-onMounted(() => {
-  initMockData()
+// 监听当前儿童变化，加载健康数据
+watch(currentChild, (child) => {
+  if (child && child._id) {
+    healthStore.fetchHealthOverview(child._id)
+  }
+}, { immediate: true })
+
+onMounted(async () => {
+  // 检查登录状态
+  userStore.checkLoginStatus()
+  
+  // 如果已登录，加载儿童列表
+  if (isLoggedIn.value) {
+    await childrenStore.fetchChildren()
+  }
 })
 </script>
 
@@ -315,6 +319,98 @@ onMounted(() => {
   min-height: 100vh;
   background: #f5f7fa;
   padding-bottom: 180rpx;
+}
+
+// 未登录提示
+.login-prompt {
+  padding: 100rpx 32rpx;
+  
+  .prompt-card {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 80rpx 40rpx;
+    text-align: center;
+  }
+  
+  .prompt-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 32rpx;
+  }
+  
+  .prompt-title {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 16rpx;
+  }
+  
+  .prompt-text {
+    font-size: 28rpx;
+    color: #999;
+    display: block;
+    margin-bottom: 48rpx;
+  }
+  
+  .prompt-btn {
+    display: inline-block;
+    padding: 24rpx 80rpx;
+    background: linear-gradient(135deg, #4A90E2 0%, #5BA3F5 100%);
+    border-radius: 48rpx;
+    
+    text {
+      font-size: 32rpx;
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+}
+
+// 无儿童档案
+.no-child {
+  padding: 100rpx 32rpx;
+  
+  .no-child-card {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 80rpx 40rpx;
+    text-align: center;
+  }
+  
+  .no-child-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 32rpx;
+  }
+  
+  .no-child-title {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 16rpx;
+  }
+  
+  .no-child-text {
+    font-size: 28rpx;
+    color: #999;
+    display: block;
+    margin-bottom: 48rpx;
+  }
+  
+  .add-child-btn {
+    display: inline-block;
+    padding: 24rpx 80rpx;
+    background: linear-gradient(135deg, #4A90E2 0%, #5BA3F5 100%);
+    border-radius: 48rpx;
+    
+    text {
+      font-size: 32rpx;
+      color: #fff;
+      font-weight: 600;
+    }
+  }
 }
 
 .child-card {

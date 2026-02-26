@@ -1,141 +1,175 @@
 <template>
   <view class="medicine-page">
-    <!-- 用药提醒 -->
-    <view class="medicine-alert">
-      <view class="alert-header">
-        <text class="alert-icon">⏰</text>
-        <view class="alert-info">
-          <text class="alert-title">下次可用时间</text>
-          <text class="alert-time">{{ nextAvailableTime }}</text>
-        </view>
-      </view>
-      <view class="alert-countdown" v-if="countdown">
-        <text class="countdown-text">{{ countdown }}</text>
-      </view>
-      <view class="alert-stats">
-        <text class="stats-label">📊 今日用药统计</text>
-        <text class="stats-value" v-for="stat in todayStats" :key="stat.name">
-          {{ stat.name }}: {{ stat.current }}/{{ stat.max }}次
-        </text>
+    <!-- 未登录提示 -->
+    <view class="login-prompt" v-if="!isLoggedIn">
+      <view class="prompt-card">
+        <text class="prompt-icon">🔐</text>
+        <text class="prompt-title">请先登录</text>
+        <text class="prompt-text">登录后查看用药记录</text>
       </view>
     </view>
 
-    <!-- 用药记录 -->
-    <view class="medicine-section">
-      <text class="section-title">用药记录</text>
-      
-      <view class="medicine-list" v-if="medicineRecords.length > 0">
-        <view 
-          class="medicine-item" 
-          v-for="record in medicineRecords" 
-          :key="record._id"
-        >
-          <view class="medicine-header">
-            <view class="medicine-info">
-              <text class="medicine-name">{{ record.medicineName }}</text>
-              <text class="medicine-dosage">{{ record.dosage }}{{ record.unit }}</text>
+    <!-- 无儿童档案 -->
+    <view class="no-child" v-else-if="!currentChild">
+      <view class="no-child-card">
+        <text class="no-child-icon">👶</text>
+        <text class="no-child-title">还没有儿童档案</text>
+        <text class="no-child-text">添加儿童档案开始记录</text>
+      </view>
+    </view>
+
+    <!-- 正常内容 -->
+    <template v-else>
+      <!-- 用药提醒 -->
+      <view class="medicine-alert">
+        <view class="alert-header">
+          <text class="alert-icon">⏰</text>
+          <view class="alert-info">
+            <text class="alert-title">下次可用时间</text>
+            <text class="alert-time">{{ nextAvailableTime }}</text>
+          </view>
+        </view>
+        <view class="alert-countdown" v-if="countdown">
+          <text class="countdown-text">{{ countdown }}</text>
+        </view>
+        <view class="alert-stats">
+          <text class="stats-label">📊 今日用药统计</text>
+          <text class="stats-value" v-for="stat in todayStats" :key="stat.name">
+            {{ stat.name }}: {{ stat.current }}/{{ stat.max }}次
+          </text>
+        </view>
+      </view>
+
+      <!-- 用药记录 -->
+      <view class="medicine-section">
+        <text class="section-title">用药记录</text>
+        
+        <view class="medicine-list" v-if="medicineRecords.length > 0">
+          <view 
+            class="medicine-item" 
+            v-for="record in medicineRecords" 
+            :key="record._id"
+          >
+            <view class="medicine-header">
+              <view class="medicine-info">
+                <text class="medicine-name">{{ record.medicineName }}</text>
+                <text class="medicine-dosage">{{ record.dosage }}{{ record.unit }}</text>
+              </view>
+              <text class="medicine-time">{{ formatDate(record.takeTime, 'MM-DD HH:mm') }}</text>
             </view>
-            <text class="medicine-time">{{ formatDate(record.takeTime, 'MM-DD HH:mm') }}</text>
-          </view>
-          <view class="medicine-next" v-if="record.nextTakeTime">
-            <text class="next-icon">⏱</text>
-            <text class="next-text">下次可用: {{ formatDate(record.nextTakeTime, 'HH:mm') }}</text>
-          </view>
-          <view class="medicine-notes" v-if="record.notes">
-            <text>{{ record.notes }}</text>
+            <view class="medicine-next" v-if="record.nextTakeTime">
+              <text class="next-icon">⏱</text>
+              <text class="next-text">下次可用: {{ formatDate(record.nextTakeTime, 'HH:mm') }}</text>
+            </view>
+            <view class="medicine-notes" v-if="record.notes">
+              <text>{{ record.notes }}</text>
+            </view>
           </view>
         </view>
+        
+        <view class="empty-state" v-else>
+          <text class="empty-icon">💊</text>
+          <text class="empty-text">暂无用药记录</text>
+        </view>
       </view>
-      
-      <view class="empty-state" v-else>
-        <text class="empty-icon">💊</text>
-        <text class="empty-text">暂无用药记录</text>
+
+      <!-- 添加按钮 -->
+      <view class="add-btn" @click="showAddModal = true">
+        <text class="add-icon">+</text>
       </view>
-    </view>
 
-    <!-- 添加按钮 -->
-    <view class="add-btn" @click="showAddModal = true">
-      <text class="add-icon">+</text>
-    </view>
-
-    <!-- 用药录入弹窗 -->
-    <MedicineModal 
-      v-model:show="showAddModal" 
-      @success="handleRecordSuccess"
-    />
+      <!-- 用药录入弹窗 -->
+      <MedicineModal 
+        v-model:show="showAddModal" 
+        @success="handleRecordSuccess"
+      />
+    </template>
   </view>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useHealthStore } from '../../src/store/modules/health'
+import { useChildrenStore } from '../../src/store/modules/children'
+import { useUserStore } from '../../src/store/modules/user'
 import { formatDate } from '../../src/utils/date'
 import MedicineModal from '../../src/components/MedicineModal.vue'
 
 const healthStore = useHealthStore()
+const childrenStore = useChildrenStore()
+const userStore = useUserStore()
 
 const showAddModal = ref(false)
 const nextAvailableTime = ref('--:--')
 const countdown = ref('')
 
+// 登录状态
+const isLoggedIn = computed(() => userStore.isLoggedIn)
+const currentChild = computed(() => childrenStore.currentChild)
 const medicineRecords = computed(() => healthStore.medicineRecords)
 
 const todayStats = computed(() => {
-  // 模拟今日用药统计
-  return [
-    { name: '美林', current: 2, max: 4 },
-    { name: '泰诺林', current: 1, max: 4 }
-  ]
+  // 根据今日用药记录计算统计
+  const todayRecords = healthStore.todayMedicineRecords
+  const stats: Record<string, { current: number; max: number }> = {}
+  
+  todayRecords.forEach(record => {
+    if (!stats[record.medicineName]) {
+      stats[record.medicineName] = { current: 0, max: 4 }
+    }
+    stats[record.medicineName].current++
+  })
+  
+  return Object.entries(stats).map(([name, data]) => ({
+    name,
+    ...data
+  }))
 })
 
 function handleRecordSuccess() {
-  // 数据已通过 store 更新
+  // 重新加载数据
+  if (currentChild.value?._id) {
+    healthStore.fetchMedicineRecords(currentChild.value._id)
+  }
   updateNextAvailableTime()
 }
 
 function updateNextAvailableTime() {
-  // 模拟计算下次可用时间
-  const now = new Date()
-  const next = new Date(now.getTime() + 4 * 60 * 60 * 1000)
-  nextAvailableTime.value = formatDate(next, 'HH:mm')
-  
-  // 计算倒计时
-  const diff = next.getTime() - now.getTime()
-  const hours = Math.floor(diff / (1000 * 60 * 60))
-  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-  countdown.value = `(还剩${hours}小时${minutes}分钟)`
+  // 根据最近用药记录计算下次可用时间
+  const records = medicineRecords.value
+  if (records.length > 0) {
+    const latest = records[0]
+    const takeTime = new Date(latest.takeTime)
+    const nextTime = new Date(takeTime.getTime() + 4 * 60 * 60 * 1000) // 4小时间隔
+    nextAvailableTime.value = formatDate(nextTime, 'HH:mm')
+    
+    const now = new Date()
+    if (nextTime > now) {
+      const diff = nextTime.getTime() - now.getTime()
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
+      countdown.value = `(还剩${hours}小时${minutes}分钟)`
+    } else {
+      countdown.value = ''
+      nextAvailableTime.value = '现在可用'
+    }
+  }
 }
 
-onMounted(() => {
-  // 加载模拟数据
-  if (medicineRecords.value.length === 0) {
-    const mockRecords = [
-      {
-        _id: '1',
-        childId: '1',
-        medicineId: '1',
-        medicineName: '美林',
-        dosage: '5',
-        unit: 'ml',
-        takeTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-        nextTakeTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-        createTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString()
-      },
-      {
-        _id: '2',
-        childId: '1',
-        medicineId: '2',
-        medicineName: '泰诺林',
-        dosage: '3',
-        unit: 'ml',
-        takeTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-        createTime: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString()
-      }
-    ]
-    healthStore.setMedicineRecords(mockRecords)
+// 监听当前儿童变化，加载数据
+watch(currentChild, (child) => {
+  if (child && child._id) {
+    healthStore.fetchMedicineRecords(child._id)
   }
-  
+}, { immediate: true })
+
+// 监听用药记录变化，更新下次可用时间
+watch(medicineRecords, () => {
   updateNextAvailableTime()
+}, { deep: true })
+
+onMounted(() => {
+  userStore.checkLoginStatus()
 })
 </script>
 
@@ -144,6 +178,70 @@ onMounted(() => {
   min-height: 100vh;
   background: #f5f7fa;
   padding-bottom: 180rpx;
+}
+
+// 未登录提示
+.login-prompt {
+  padding: 100rpx 32rpx;
+  
+  .prompt-card {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 80rpx 40rpx;
+    text-align: center;
+  }
+  
+  .prompt-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 32rpx;
+  }
+  
+  .prompt-title {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 16rpx;
+  }
+  
+  .prompt-text {
+    font-size: 28rpx;
+    color: #999;
+    display: block;
+  }
+}
+
+// 无儿童档案
+.no-child {
+  padding: 100rpx 32rpx;
+  
+  .no-child-card {
+    background: #fff;
+    border-radius: 24rpx;
+    padding: 80rpx 40rpx;
+    text-align: center;
+  }
+  
+  .no-child-icon {
+    font-size: 120rpx;
+    display: block;
+    margin-bottom: 32rpx;
+  }
+  
+  .no-child-title {
+    font-size: 40rpx;
+    font-weight: 700;
+    color: #333;
+    display: block;
+    margin-bottom: 16rpx;
+  }
+  
+  .no-child-text {
+    font-size: 28rpx;
+    color: #999;
+    display: block;
+  }
 }
 
 // 用药提醒

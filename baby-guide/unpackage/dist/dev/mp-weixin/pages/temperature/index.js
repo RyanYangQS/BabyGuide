@@ -1,6 +1,8 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const src_store_modules_health = require("../../src/store/modules/health.js");
+const src_store_modules_children = require("../../src/store/modules/children.js");
+const src_store_modules_user = require("../../src/store/modules/user.js");
 const src_utils_theme = require("../../src/utils/theme.js");
 const src_utils_date = require("../../src/utils/date.js");
 if (!Math) {
@@ -12,8 +14,12 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "index",
   setup(__props) {
     const healthStore = src_store_modules_health.useHealthStore();
+    const childrenStore = src_store_modules_children.useChildrenStore();
+    const userStore = src_store_modules_user.useUserStore();
     const timeFilter = common_vendor.ref("today");
     const showAddModal = common_vendor.ref(false);
+    const isLoggedIn = common_vendor.computed(() => userStore.isLoggedIn);
+    const currentChild = common_vendor.computed(() => childrenStore.currentChild);
     const temperatureRecords = common_vendor.computed(() => healthStore.temperatureRecords);
     const latestTemperature = common_vendor.computed(() => healthStore.latestTemperature);
     const currentHealthStatus = common_vendor.computed(() => healthStore.currentHealthStatus);
@@ -71,67 +77,53 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       return partMap[part] || part;
     }
     function handleRecordSuccess() {
-    }
-    common_vendor.onMounted(() => {
-      if (temperatureRecords.value.length === 0) {
-        const mockRecords = [
-          {
-            _id: "1",
-            childId: "1",
-            temperature: 38.5,
-            measureTime: (/* @__PURE__ */ new Date()).toISOString(),
-            measurePart: "axillary",
-            createTime: (/* @__PURE__ */ new Date()).toISOString()
-          },
-          {
-            _id: "2",
-            childId: "1",
-            temperature: 37.8,
-            measureTime: new Date(Date.now() - 4 * 60 * 60 * 1e3).toISOString(),
-            measurePart: "axillary",
-            createTime: new Date(Date.now() - 4 * 60 * 60 * 1e3).toISOString()
-          },
-          {
-            _id: "3",
-            childId: "1",
-            temperature: 39.2,
-            measureTime: new Date(Date.now() - 8 * 60 * 60 * 1e3).toISOString(),
-            measurePart: "ear",
-            createTime: new Date(Date.now() - 8 * 60 * 60 * 1e3).toISOString()
-          }
-        ];
-        healthStore.setTemperatureRecords(mockRecords);
+      var _a;
+      if ((_a = currentChild.value) == null ? void 0 : _a._id) {
+        healthStore.fetchTemperatureRecords(currentChild.value._id);
       }
+    }
+    common_vendor.watch(currentChild, (child) => {
+      if (child && child._id) {
+        healthStore.fetchTemperatureRecords(child._id);
+      }
+    }, { immediate: true });
+    common_vendor.onMounted(() => {
+      userStore.checkLoginStatus();
     });
     return (_ctx, _cache) => {
       var _a;
       return common_vendor.e({
-        a: common_vendor.t(healthStatusText.value),
-        b: common_vendor.n(statusClass.value),
-        c: common_vendor.t(((_a = latestTemperature.value) == null ? void 0 : _a.temperature) || "--"),
-        d: latestTemperature.value
+        a: !isLoggedIn.value
+      }, !isLoggedIn.value ? {} : !currentChild.value ? {} : common_vendor.e({
+        c: common_vendor.t(healthStatusText.value),
+        d: common_vendor.n(statusClass.value),
+        e: common_vendor.t(((_a = latestTemperature.value) == null ? void 0 : _a.temperature) || "--"),
+        f: latestTemperature.value
       }, latestTemperature.value ? {
-        e: common_vendor.t(common_vendor.unref(src_utils_date.formatDate)(latestTemperature.value.measureTime, "YYYY-MM-DD HH:mm"))
+        g: common_vendor.t(common_vendor.unref(src_utils_date.formatDate)(latestTemperature.value.measureTime, "YYYY-MM-DD HH:mm"))
       } : {}, {
-        f: timeFilter.value === "today" ? 1 : "",
-        g: common_vendor.o(($event) => timeFilter.value = "today"),
-        h: timeFilter.value === "yesterday" ? 1 : "",
-        i: common_vendor.o(($event) => timeFilter.value = "yesterday"),
-        j: timeFilter.value === "week" ? 1 : "",
-        k: common_vendor.o(($event) => timeFilter.value = "week"),
-        l: !showAddModal.value
-      }, !showAddModal.value ? {
-        m: common_vendor.p({
+        h: temperatureRecords.value.length > 0
+      }, temperatureRecords.value.length > 0 ? {
+        i: timeFilter.value === "today" ? 1 : "",
+        j: common_vendor.o(($event) => timeFilter.value = "today"),
+        k: timeFilter.value === "yesterday" ? 1 : "",
+        l: common_vendor.o(($event) => timeFilter.value = "yesterday"),
+        m: timeFilter.value === "week" ? 1 : "",
+        n: common_vendor.o(($event) => timeFilter.value = "week"),
+        o: common_vendor.p({
           data: chartData.value,
           height: 300
         })
       } : {}, {
-        n: common_vendor.t(temperatureStats.value.max),
-        o: common_vendor.t(temperatureStats.value.min),
-        p: common_vendor.t(temperatureStats.value.avg),
-        q: temperatureRecords.value.length > 0
+        p: temperatureRecords.value.length > 0
       }, temperatureRecords.value.length > 0 ? {
-        r: common_vendor.f(temperatureRecords.value, (record, k0, i0) => {
+        q: common_vendor.t(temperatureStats.value.max),
+        r: common_vendor.t(temperatureStats.value.min),
+        s: common_vendor.t(temperatureStats.value.avg)
+      } : {}, {
+        t: temperatureRecords.value.length > 0
+      }, temperatureRecords.value.length > 0 ? {
+        v: common_vendor.f(temperatureRecords.value, (record, k0, i0) => {
           return common_vendor.e({
             a: common_vendor.t(record.temperature),
             b: common_vendor.t(getStatusText(record.temperature)),
@@ -147,13 +139,15 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
           });
         })
       } : {}, {
-        s: common_vendor.o(($event) => showAddModal.value = true),
-        t: common_vendor.o(handleRecordSuccess),
-        v: common_vendor.o(($event) => showAddModal.value = $event),
-        w: common_vendor.p({
+        w: common_vendor.o(($event) => showAddModal.value = true),
+        x: common_vendor.o(handleRecordSuccess),
+        y: common_vendor.o(($event) => showAddModal.value = $event),
+        z: common_vendor.p({
           show: showAddModal.value
-        }),
-        x: common_vendor.n(themeClass.value)
+        })
+      }), {
+        b: !currentChild.value,
+        A: common_vendor.n(themeClass.value)
       });
     };
   }

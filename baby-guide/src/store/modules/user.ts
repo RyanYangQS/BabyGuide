@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import * as api from '../api'
+import { userLogin as userLoginApi } from '../../api'
 
 export interface User {
   userId: string
   openid: string
+  nickName?: string
+  avatarUrl?: string
   isNewUser?: boolean
 }
 
@@ -14,13 +16,13 @@ export const useUserStore = defineStore('user', () => {
   const loading = ref(false)
 
   /**
-   * 登录
+   * 登录（获取 openid）
    */
   async function login() {
     loading.value = true
     
     try {
-      const res = await api.userLogin()
+      const res = await userLoginApi()
       
       if (res.success && res.data) {
         isLoggedIn.value = true
@@ -47,17 +49,35 @@ export const useUserStore = defineStore('user', () => {
   }
 
   /**
+   * 更新用户信息（头像、昵称）
+   */
+  function updateUserInfo(nickName: string, avatarUrl: string) {
+    if (userInfo.value) {
+      userInfo.value.nickName = nickName
+      userInfo.value.avatarUrl = avatarUrl
+      
+      // 保存到本地
+      uni.setStorageSync('userNickName', nickName)
+      uni.setStorageSync('userAvatarUrl', avatarUrl)
+    }
+  }
+
+  /**
    * 检查登录状态
    */
   function checkLoginStatus() {
     const loggedIn = uni.getStorageSync('isLoggedIn')
     const userId = uni.getStorageSync('userId')
+    const nickName = uni.getStorageSync('userNickName')
+    const avatarUrl = uni.getStorageSync('userAvatarUrl')
     
     if (loggedIn && userId) {
       isLoggedIn.value = true
       userInfo.value = {
         userId,
-        openid: ''
+        openid: '',
+        nickName,
+        avatarUrl
       }
       return true
     }
@@ -72,6 +92,8 @@ export const useUserStore = defineStore('user', () => {
     userInfo.value = null
     uni.removeStorageSync('isLoggedIn')
     uni.removeStorageSync('userId')
+    uni.removeStorageSync('userNickName')
+    uni.removeStorageSync('userAvatarUrl')
   }
 
   return {
@@ -79,6 +101,7 @@ export const useUserStore = defineStore('user', () => {
     userInfo,
     loading,
     login,
+    updateUserInfo,
     checkLoginStatus,
     logout
   }
