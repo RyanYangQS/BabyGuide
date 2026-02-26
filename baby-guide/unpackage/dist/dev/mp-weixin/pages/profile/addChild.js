@@ -16,6 +16,7 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
       allergies: "",
       notes: ""
     });
+    const submitting = common_vendor.ref(false);
     function handleChooseAvatar() {
       common_vendor.index.chooseImage({
         count: 1,
@@ -32,7 +33,7 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
     function handleBloodTypeChange(e) {
       formData.value.bloodType = bloodTypes[e.detail.value];
     }
-    function handleSubmit() {
+    async function handleSubmit() {
       if (!formData.value.name) {
         common_vendor.index.showToast({
           title: "请输入姓名",
@@ -47,26 +48,25 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         });
         return;
       }
-      const child = {
-        _id: Date.now().toString(),
+      submitting.value = true;
+      const res = await childrenStore.addChildApi({
         name: formData.value.name,
-        avatar: formData.value.avatar,
         gender: formData.value.gender,
         birthday: formData.value.birthday,
         bloodType: formData.value.bloodType,
         allergies: formData.value.allergies.split(",").filter(Boolean),
-        notes: formData.value.notes,
-        createTime: (/* @__PURE__ */ new Date()).toISOString(),
-        updateTime: (/* @__PURE__ */ new Date()).toISOString()
-      };
-      childrenStore.addChild(child);
-      common_vendor.index.showToast({
-        title: "保存成功",
-        icon: "success"
+        notes: formData.value.notes
       });
-      setTimeout(() => {
-        common_vendor.index.navigateBack();
-      }, 1500);
+      submitting.value = false;
+      if (res.success) {
+        common_vendor.index.showToast({
+          title: "保存成功",
+          icon: "success"
+        });
+        setTimeout(() => {
+          common_vendor.index.navigateBack();
+        }, 1500);
+      }
     }
     return (_ctx, _cache) => {
       return common_vendor.e({

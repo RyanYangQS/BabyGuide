@@ -1,1 +1,0 @@
-<view class="custom-tabbar data-v-686b695e"><view wx:for="{{a}}" wx:for-item="item" wx:key="c" class="{{['tabbar-item', 'data-v-686b695e', item.d && 'active']}}" bindtap="{{item.e}}"><view class="tabbar-icon data-v-686b695e"><text class="icon-emoji data-v-686b695e">{{item.a}}</text></view><text class="tabbar-text data-v-686b695e">{{item.b}}</text></view></view>

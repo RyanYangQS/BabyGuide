@@ -85,6 +85,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useHealthStore } from '../store/modules/health'
+import { useChildrenStore } from '../store/modules/children'
 
 interface Props {
   show: boolean
@@ -99,6 +100,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const healthStore = useHealthStore()
+const childrenStore = useChildrenStore()
 const loading = ref(false)
 
 // 常用药品
@@ -148,25 +150,31 @@ async function handleSubmit() {
     return
   }
 
+  // 检查是否有选中的儿童
+  const currentChild = childrenStore.currentChild
+  if (!currentChild) {
+    uni.showToast({ title: '请先添加儿童档案', icon: 'none' })
+    return
+  }
+
   loading.value = true
 
   try {
-    // 添加用药记录
-    healthStore.addMedicineRecord({
-      _id: Date.now().toString(),
-      childId: '1',
-      medicineId: '',
+    // 调用 API 添加用药记录
+    const res = await healthStore.addMedicineRecordApi({
+      childId: currentChild._id,
       medicineName: formData.medicineName,
       dosage: formData.dosage,
       unit: formData.unit,
       takeTime: new Date().toISOString(),
-      notes: formData.notes,
-      createTime: new Date().toISOString()
+      notes: formData.notes
     })
 
-    uni.showToast({ title: '记录成功', icon: 'success' })
-    emit('success')
-    handleClose()
+    if (res.success) {
+      uni.showToast({ title: '记录成功', icon: 'success' })
+      emit('success')
+      handleClose()
+    }
   } finally {
     loading.value = false
   }

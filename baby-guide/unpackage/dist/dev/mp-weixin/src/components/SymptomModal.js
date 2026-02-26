@@ -1,6 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const src_store_modules_health = require("../store/modules/health.js");
+const src_store_modules_children = require("../store/modules/children.js");
 const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "SymptomModal",
   props: {
@@ -10,18 +11,19 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   setup(__props, { emit: __emit }) {
     const emit = __emit;
     const healthStore = src_store_modules_health.useHealthStore();
+    const childrenStore = src_store_modules_children.useChildrenStore();
     const loading = common_vendor.ref(false);
     const symptomOptions = [
-      { value: "fever", label: "发热", icon: "🌡️" },
-      { value: "cough", label: "咳嗽", icon: "😷" },
-      { value: "runny_nose", label: "流涕", icon: "🤧" },
-      { value: "sore_throat", label: "咽痛", icon: "😫" },
-      { value: "vomiting", label: "呕吐", icon: "🤢" },
-      { value: "diarrhea", label: "腹泻", icon: "💩" },
-      { value: "rash", label: "皮疹", icon: "🔴" },
-      { value: "headache", label: "头痛", icon: "🤕" },
-      { value: "stomachache", label: "腹痛", icon: "😣" },
-      { value: "loss_appetite", label: "食欲不振", icon: "🍽️" }
+      { value: "发热", label: "发热", icon: "🌡️" },
+      { value: "咳嗽", label: "咳嗽", icon: "😷" },
+      { value: "流涕", label: "流涕", icon: "🤧" },
+      { value: "咽痛", label: "咽痛", icon: "😫" },
+      { value: "呕吐", label: "呕吐", icon: "🤢" },
+      { value: "腹泻", label: "腹泻", icon: "💩" },
+      { value: "皮疹", label: "皮疹", icon: "🔴" },
+      { value: "头痛", label: "头痛", icon: "🤕" },
+      { value: "腹痛", label: "腹痛", icon: "😣" },
+      { value: "食欲不振", label: "食欲不振", icon: "🍽️" }
     ];
     const severityLevels = [
       { value: "mild", label: "轻微", color: "#52C41A" },
@@ -55,20 +57,25 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         common_vendor.index.showToast({ title: "请至少选择一项症状", icon: "none" });
         return;
       }
+      const currentChild = childrenStore.currentChild;
+      if (!currentChild) {
+        common_vendor.index.showToast({ title: "请先添加儿童档案", icon: "none" });
+        return;
+      }
       loading.value = true;
       try {
-        healthStore.addSymptomRecord({
-          _id: Date.now().toString(),
-          childId: "1",
+        const res = await healthStore.addSymptomRecordApi({
+          childId: currentChild._id,
           symptoms: formData.symptoms,
           severity: formData.severity,
           recordTime: (/* @__PURE__ */ new Date()).toISOString(),
-          notes: formData.description,
-          createTime: (/* @__PURE__ */ new Date()).toISOString()
+          notes: formData.description
         });
-        common_vendor.index.showToast({ title: "记录成功", icon: "success" });
-        emit("success");
-        handleClose();
+        if (res.success) {
+          common_vendor.index.showToast({ title: "记录成功", icon: "success" });
+          emit("success");
+          handleClose();
+        }
       } finally {
         loading.value = false;
       }

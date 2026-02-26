@@ -80,6 +80,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useHealthStore } from '../store/modules/health'
+import { useChildrenStore } from '../store/modules/children'
 
 interface Props {
   show: boolean
@@ -94,6 +95,7 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const healthStore = useHealthStore()
+const childrenStore = useChildrenStore()
 const loading = ref(false)
 
 // 快捷温度
@@ -147,23 +149,30 @@ async function handleSubmit() {
     return
   }
 
+  // 检查是否有选中的儿童
+  const currentChild = childrenStore.currentChild
+  if (!currentChild) {
+    uni.showToast({ title: '请先添加儿童档案', icon: 'none' })
+    return
+  }
+
   loading.value = true
 
   try {
-    // 添加体温记录
-    healthStore.addTemperatureRecord({
-      _id: Date.now().toString(),
-      childId: '1',
+    // 调用 API 添加体温记录
+    const res = await healthStore.addTemperatureRecordApi({
+      childId: currentChild._id,
       temperature: temp,
       measureTime: new Date().toISOString(),
-      measurePart: formData.measurePart as any,
-      notes: formData.notes,
-      createTime: new Date().toISOString()
+      measurePart: formData.measurePart as 'oral' | 'axillary' | 'rectal' | 'ear',
+      notes: formData.notes
     })
 
-    uni.showToast({ title: '记录成功', icon: 'success' })
-    emit('success')
-    handleClose()
+    if (res.success) {
+      uni.showToast({ title: '记录成功', icon: 'success' })
+      emit('success')
+      handleClose()
+    }
   } finally {
     loading.value = false
   }

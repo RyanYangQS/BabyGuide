@@ -1,6 +1,7 @@
 "use strict";
 const common_vendor = require("../../common/vendor.js");
 const src_store_modules_health = require("../store/modules/health.js");
+const src_store_modules_children = require("../store/modules/children.js");
 const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   __name: "MedicineModal",
   props: {
@@ -10,6 +11,7 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
   setup(__props, { emit: __emit }) {
     const emit = __emit;
     const healthStore = src_store_modules_health.useHealthStore();
+    const childrenStore = src_store_modules_children.useChildrenStore();
     const loading = common_vendor.ref(false);
     const commonMedicines = ["美林", "泰诺林", "小儿氨酚黄那敏颗粒", "布洛芬"];
     const units = ["ml", "mg", "片", "袋"];
@@ -38,22 +40,26 @@ const _sfc_main = /* @__PURE__ */ common_vendor.defineComponent({
         common_vendor.index.showToast({ title: "请输入剂量", icon: "none" });
         return;
       }
+      const currentChild = childrenStore.currentChild;
+      if (!currentChild) {
+        common_vendor.index.showToast({ title: "请先添加儿童档案", icon: "none" });
+        return;
+      }
       loading.value = true;
       try {
-        healthStore.addMedicineRecord({
-          _id: Date.now().toString(),
-          childId: "1",
-          medicineId: "",
+        const res = await healthStore.addMedicineRecordApi({
+          childId: currentChild._id,
           medicineName: formData.medicineName,
           dosage: formData.dosage,
           unit: formData.unit,
           takeTime: (/* @__PURE__ */ new Date()).toISOString(),
-          notes: formData.notes,
-          createTime: (/* @__PURE__ */ new Date()).toISOString()
+          notes: formData.notes
         });
-        common_vendor.index.showToast({ title: "记录成功", icon: "success" });
-        emit("success");
-        handleClose();
+        if (res.success) {
+          common_vendor.index.showToast({ title: "记录成功", icon: "success" });
+          emit("success");
+          handleClose();
+        }
       } finally {
         loading.value = false;
       }

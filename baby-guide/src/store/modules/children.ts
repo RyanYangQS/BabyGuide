@@ -1,20 +1,14 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import type { Child } from '../types'
+import * as api from '../../api'
+import type { Child } from '../../types'
 
 export const useChildrenStore = defineStore('children', () => {
-  // 当前选中的儿童
   const currentChild = ref<Child | null>(null)
-  
-  // 儿童列表
   const childrenList = ref<Child[]>([])
-  
-  // 加载状态
   const loading = ref(false)
+
   
-  /**
-   * 设置当前儿童
-   */
   function setCurrentChild(child: Child | null) {
     currentChild.value = child
     if (child) {
@@ -24,23 +18,69 @@ export const useChildrenStore = defineStore('children', () => {
     }
   }
   
-  /**
-   * 设置儿童列表
-   */
   function setChildrenList(list: Child[]) {
     childrenList.value = list
   }
   
-  /**
-   * 添加儿童到列表
-   */
+  async function fetchChildren() {
+    loading.value = true
+    const res = await api.getChildren()
+    loading.value = false
+    
+    if (res.success && res.data) {
+      childrenList.value = res.data
+      restoreCurrentChild()
+    }
+    return res
+  }
+  
+  async function addChildApi(data: {
+    name: string
+    gender: 'male' | 'female'
+    birthday: string
+    bloodType?: string
+    allergies?: string[]
+    notes?: string
+  }) {
+    const res = await api.addChild(data)
+    
+    if (res.success && res.data) {
+      childrenList.value.push(res.data as Child)
+      if (!currentChild.value) {
+        setCurrentChild(res.data as Child)
+      }
+    }
+    return res
+  }
+  
   function addChild(child: Child) {
     childrenList.value.push(child)
   }
   
-  /**
-   * 更新儿童信息
-   */
+  async function updateChildApi(data: {
+    childId: string
+    name?: string
+    gender?: 'male' | 'female'
+    birthday?: string
+    bloodType?: string
+    allergies?: string[]
+    notes?: string
+    avatar?: string
+  }) {
+    const res = await api.updateChild(data)
+    
+    if (res.success) {
+      const index = childrenList.value.findIndex(c => c._id === data.childId)
+      if (index !== -1) {
+        Object.assign(childrenList.value[index], data)
+        if (currentChild.value?._id === data.childId) {
+          Object.assign(currentChild.value, data)
+        }
+      }
+    }
+    return res
+  }
+  
   function updateChild(child: Child) {
     const index = childrenList.value.findIndex(c => c._id === child._id)
     if (index !== -1) {
@@ -51,9 +91,21 @@ export const useChildrenStore = defineStore('children', () => {
     }
   }
   
-  /**
-   * 删除儿童
-   */
+  async function deleteChildApi(childId: string) {
+    const res = await api.deleteChild(childId)
+    
+    if (res.success) {
+      childrenList.value = childrenList.value.filter(c => c._id !== childId)
+      if (currentChild.value?._id === childId) {
+        currentChild.value = childrenList.value[0] || null
+        if (currentChild.value) {
+          uni.setStorageSync('currentChildId', currentChild.value._id)
+        }
+      }
+    }
+    return res
+  }
+  
   function removeChild(childId: string) {
     childrenList.value = childrenList.value.filter(c => c._id !== childId)
     if (currentChild.value?._id === childId) {
@@ -61,9 +113,6 @@ export const useChildrenStore = defineStore('children', () => {
     }
   }
   
-  /**
-   * 从本地存储恢复当前儿童
-   */
   function restoreCurrentChild() {
     const currentChildId = uni.getStorageSync('currentChildId')
     if (currentChildId && childrenList.value.length > 0) {
@@ -84,8 +133,12 @@ export const useChildrenStore = defineStore('children', () => {
     loading,
     setCurrentChild,
     setChildrenList,
+    fetchChildren,
+    addChildApi,
     addChild,
+    updateChildApi,
     updateChild,
+    deleteChildApi,
     removeChild,
     restoreCurrentChild
   }

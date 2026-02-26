@@ -1,5 +1,6 @@
 "use strict";
 const common_vendor = require("../../../common/vendor.js");
+const src_api_index = require("../../api/index.js");
 const useChildrenStore = common_vendor.defineStore("children", () => {
   const currentChild = common_vendor.ref(null);
   const childrenList = common_vendor.ref([]);
@@ -15,8 +16,42 @@ const useChildrenStore = common_vendor.defineStore("children", () => {
   function setChildrenList(list) {
     childrenList.value = list;
   }
+  async function fetchChildren() {
+    loading.value = true;
+    const res = await src_api_index.getChildren();
+    loading.value = false;
+    if (res.success && res.data) {
+      childrenList.value = res.data;
+      restoreCurrentChild();
+    }
+    return res;
+  }
+  async function addChildApi(data) {
+    const res = await src_api_index.addChild(data);
+    if (res.success && res.data) {
+      childrenList.value.push(res.data);
+      if (!currentChild.value) {
+        setCurrentChild(res.data);
+      }
+    }
+    return res;
+  }
   function addChild(child) {
     childrenList.value.push(child);
+  }
+  async function updateChildApi(data) {
+    var _a;
+    const res = await src_api_index.updateChild(data);
+    if (res.success) {
+      const index = childrenList.value.findIndex((c) => c._id === data.childId);
+      if (index !== -1) {
+        Object.assign(childrenList.value[index], data);
+        if (((_a = currentChild.value) == null ? void 0 : _a._id) === data.childId) {
+          Object.assign(currentChild.value, data);
+        }
+      }
+    }
+    return res;
   }
   function updateChild(child) {
     var _a;
@@ -27,6 +62,20 @@ const useChildrenStore = common_vendor.defineStore("children", () => {
         currentChild.value = child;
       }
     }
+  }
+  async function deleteChildApi(childId) {
+    var _a;
+    const res = await src_api_index.deleteChild(childId);
+    if (res.success) {
+      childrenList.value = childrenList.value.filter((c) => c._id !== childId);
+      if (((_a = currentChild.value) == null ? void 0 : _a._id) === childId) {
+        currentChild.value = childrenList.value[0] || null;
+        if (currentChild.value) {
+          common_vendor.index.setStorageSync("currentChildId", currentChild.value._id);
+        }
+      }
+    }
+    return res;
   }
   function removeChild(childId) {
     var _a;
@@ -54,8 +103,12 @@ const useChildrenStore = common_vendor.defineStore("children", () => {
     loading,
     setCurrentChild,
     setChildrenList,
+    fetchChildren,
+    addChildApi,
     addChild,
+    updateChildApi,
     updateChild,
+    deleteChildApi,
     removeChild,
     restoreCurrentChild
   };

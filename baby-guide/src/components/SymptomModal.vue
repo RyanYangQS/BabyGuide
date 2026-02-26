@@ -70,6 +70,7 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useHealthStore } from '../store/modules/health'
+import { useChildrenStore } from '../store/modules/children'
 
 interface Props {
   show: boolean
@@ -84,20 +85,21 @@ const props = defineProps<Props>()
 const emit = defineEmits<Emits>()
 
 const healthStore = useHealthStore()
+const childrenStore = useChildrenStore()
 const loading = ref(false)
 
 // 症状选项
 const symptomOptions = [
-  { value: 'fever', label: '发热', icon: '🌡️' },
-  { value: 'cough', label: '咳嗽', icon: '😷' },
-  { value: 'runny_nose', label: '流涕', icon: '🤧' },
-  { value: 'sore_throat', label: '咽痛', icon: '😫' },
-  { value: 'vomiting', label: '呕吐', icon: '🤢' },
-  { value: 'diarrhea', label: '腹泻', icon: '💩' },
-  { value: 'rash', label: '皮疹', icon: '🔴' },
-  { value: 'headache', label: '头痛', icon: '🤕' },
-  { value: 'stomachache', label: '腹痛', icon: '😣' },
-  { value: 'loss_appetite', label: '食欲不振', icon: '🍽️' }
+  { value: '发热', label: '发热', icon: '🌡️' },
+  { value: '咳嗽', label: '咳嗽', icon: '😷' },
+  { value: '流涕', label: '流涕', icon: '🤧' },
+  { value: '咽痛', label: '咽痛', icon: '😫' },
+  { value: '呕吐', label: '呕吐', icon: '🤢' },
+  { value: '腹泻', label: '腹泻', icon: '💩' },
+  { value: '皮疹', label: '皮疹', icon: '🔴' },
+  { value: '头痛', label: '头痛', icon: '🤕' },
+  { value: '腹痛', label: '腹痛', icon: '😣' },
+  { value: '食欲不振', label: '食欲不振', icon: '🍽️' }
 ]
 
 // 严重程度
@@ -153,23 +155,30 @@ async function handleSubmit() {
     return
   }
 
+  // 检查是否有选中的儿童
+  const currentChild = childrenStore.currentChild
+  if (!currentChild) {
+    uni.showToast({ title: '请先添加儿童档案', icon: 'none' })
+    return
+  }
+
   loading.value = true
 
   try {
-    // 添加症状记录
-    healthStore.addSymptomRecord({
-      _id: Date.now().toString(),
-      childId: '1',
+    // 调用 API 添加症状记录
+    const res = await healthStore.addSymptomRecordApi({
+      childId: currentChild._id,
       symptoms: formData.symptoms,
-      severity: formData.severity as any,
+      severity: formData.severity as 'mild' | 'moderate' | 'severe',
       recordTime: new Date().toISOString(),
-      notes: formData.description,
-      createTime: new Date().toISOString()
+      notes: formData.description
     })
 
-    uni.showToast({ title: '记录成功', icon: 'success' })
-    emit('success')
-    handleClose()
+    if (res.success) {
+      uni.showToast({ title: '记录成功', icon: 'success' })
+      emit('success')
+      handleClose()
+    }
   } finally {
     loading.value = false
   }

@@ -122,6 +122,9 @@ const formData = ref({
   notes: ''
 })
 
+// 提交状态
+const submitting = ref(false)
+
 /**
  * 选择头像
  */
@@ -153,7 +156,7 @@ function handleBloodTypeChange(e: any) {
 /**
  * 提交表单
  */
-function handleSubmit() {
+async function handleSubmit() {
   // 验证表单
   if (!formData.value.name) {
     uni.showToast({
@@ -170,31 +173,31 @@ function handleSubmit() {
     })
     return
   }
+
+  submitting.value = true
   
-  // TODO: 保存到云数据库
-  const child = {
-    _id: Date.now().toString(),
+  // 调用 API 保存
+  const res = await childrenStore.addChildApi({
     name: formData.value.name,
-    avatar: formData.value.avatar,
     gender: formData.value.gender,
     birthday: formData.value.birthday,
     bloodType: formData.value.bloodType,
     allergies: formData.value.allergies.split(',').filter(Boolean),
-    notes: formData.value.notes,
-    createTime: new Date().toISOString(),
-    updateTime: new Date().toISOString()
-  }
-  
-  childrenStore.addChild(child)
-  
-  uni.showToast({
-    title: '保存成功',
-    icon: 'success'
+    notes: formData.value.notes
   })
   
-  setTimeout(() => {
-    uni.navigateBack()
-  }, 1500)
+  submitting.value = false
+  
+  if (res.success) {
+    uni.showToast({
+      title: '保存成功',
+      icon: 'success'
+    })
+    
+    setTimeout(() => {
+      uni.navigateBack()
+    }, 1500)
+  }
 }
 </script>
 
